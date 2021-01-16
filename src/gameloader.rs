@@ -8,11 +8,11 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 
 pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
-    let mut home;
+    let mut home : String;
     // .kakara location is different depending on the OS.
     if cfg!(windows){
-        // Use %appdata% if in windows.
-        home = std::env::var("USERPROFILE").unwrap() + "\\AppData" + "\\Roaming";
+        // Use %appdata% if in windows. Using \\ directly is fine since this will only be ran on windows.
+        home = std::env::var("USERPROFILE").unwrap() + "\\AppData\\Roaming";
     }
     else if cfg!(unix){
         // Use /home/{user} if on linux. (This may work for mac. Currently untested.)
