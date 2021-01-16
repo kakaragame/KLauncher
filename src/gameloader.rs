@@ -8,7 +8,21 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 
 pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
-    let home = std::env::var("HOME").unwrap();
+    let mut home;
+    // .kakara location is different depending on the OS.
+    if cfg!(windows){
+        // Use %appdata% if in windows.
+        home = std::env::var("USERPROFILE").unwrap() + "\\AppData" + "\\Roaming";
+    }
+    else if cfg!(unix){
+        // Use /home/{user} if on linux. (This may work for mac. Currently untested.)
+        home = std::env::var("HOME").unwrap();
+    }
+    else{
+        // Else attempt to find the home environment variable.
+        home = std::env::var("HOME").unwrap();
+    }
+
     let path = Path::new(&home).join(".kakara").join("settings.yml");
     let ymlString = fs::read_to_string(path);
     let data: Settings = serde_yaml::from_str(&ymlString.unwrap()).unwrap();
