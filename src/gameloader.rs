@@ -8,23 +8,24 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 
 pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
-    let mut home : String;
+    let mut home;
     // .kakara location is different depending on the OS.
-    if cfg!(windows){
-        // Use %appdata% if in windows. Using \\ directly is fine since this will only be ran on windows.
-        home = std::env::var("USERPROFILE").unwrap() + "\\AppData\\Roaming";
-    }
-    else if cfg!(unix){
+    if cfg!(windows) {
+        // Use %appdata% if in windows.
+        home = Path::new(&format!("{}{}{}", std::env::var("USERPROFILE").unwrap(), "\\AppData", "\\Roaming")).join(".kakara");
+    } else if cfg!(linux) {
         // Use /home/{user} if on linux. (This may work for mac. Currently untested.)
-        home = std::env::var("HOME").unwrap();
-    }
-    else{
+        home = Path::new(&std::env::var("HOME").unwrap()).join(".kakara");
+    } else if cfg!(osx) {
+        home = Path::new(&std::env::var("HOME").unwrap()).join("kakara");
+    } else {
         // Else attempt to find the home environment variable.
-        home = std::env::var("HOME").unwrap();
+        home = Path::new(&std::env::var("HOME").unwrap()).join(".kakara");
     }
 
-    let path = Path::new(&home).join(".kakara").join("settings.yml");
-    let ymlString = fs::read_to_string(path);
+    home = home.join("settings.yml");
+    println!("Kakara Config {:?}", home.to_str());
+    let ymlString = fs::read_to_string(home);
     let data: Settings = serde_yaml::from_str(&ymlString.unwrap()).unwrap();
     let mut java_command = Command::new(data.java);
     let testPath = Path::new(dir).join("test").join("test.yml");
