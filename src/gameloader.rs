@@ -4,7 +4,7 @@ use std::process::Command;
 use std::time::Duration;
 
 use discord_rpc_client::Client;
-use serde::{Deserialize};
+use serde::Deserialize;
 
 pub fn load(game: &str, dir: &str, engine: &str) {
     let mut home;
@@ -35,9 +35,10 @@ pub fn load(game: &str, dir: &str, engine: &str) {
             java_command.arg(x);
         }
     }
-    java_command.current_dir(dir)
-        .arg("-cp").arg(engine).
-        arg("-jar").arg(game).spawn().unwrap();
+    java_command.current_dir(dir).
+        arg("-jar").arg(game).
+        arg(format!("{}={}", "--engine", engine)).
+        spawn().unwrap();
     discord_client(dir)
 }
 
