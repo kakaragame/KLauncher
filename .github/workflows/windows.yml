@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: set variable
-      run: set DISCORD_KEY=${{ secrets.DISCORD_KEY }}
     - name: Build
       run: cargo build --verbose
+      env:
+        DISCORD_KEY: ${{ secrets.DISCORD_KEY }}
     - uses: actions/upload-artifact@v2
       with:
        name: KLauncher
