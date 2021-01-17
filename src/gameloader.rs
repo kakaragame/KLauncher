@@ -6,7 +6,7 @@ use std::time::Duration;
 use discord_rpc_client::Client;
 use serde::Deserialize;
 
-pub fn load(game: &str, dir: &str, engine: &str) {
+pub fn load(game: &str, dir: &str, engine: String) {
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
