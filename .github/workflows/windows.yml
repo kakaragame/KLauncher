@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: set variable
+      run: set DISCORD_KEY=${{ secrets.DISCORD_KEY }}
     - name: Build
       run: cargo build --verbose
     - uses: actions/upload-artifact@v2

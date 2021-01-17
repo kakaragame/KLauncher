@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, thread};
 use std::fs::File;
 use std::io::BufReader;
 use std::ops::Index;
@@ -6,6 +6,8 @@ use std::path::Path;
 use std::process::Command;
 
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
+use discord_rpc_client::Client;
 
 pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
     let mut home;
@@ -39,6 +41,24 @@ pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
     java_command.current_dir(dir)
         .arg("-cp").arg(engine).
         arg("-jar").arg(game).spawn();
+    discordClient(dir)
+}
+
+fn discordClient(dir: &str) {
+    //Ensure file was created
+    thread::sleep(Duration::new(5,0));
+    let testPath = Path::new(dir).join("discord.yml");
+
+    let i = env!("DISCORD_KEY").parse().unwrap();
+    let mut drpc = Client::new(i);
+    drpc.start();
+    println!("Starting Discord");
+    while testPath.exists() {
+        print!("test");
+        drpc.set_activity(|act| act.state("Running the Kakara Test"));
+
+        thread::sleep(Duration::new(5,0));
+    }
 }
 
 #[derive(Deserialize)]
