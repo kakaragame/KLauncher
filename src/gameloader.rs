@@ -4,10 +4,10 @@ use std::io::BufReader;
 use std::ops::Index;
 use std::path::Path;
 use std::process::Command;
-
-use serde::{Deserialize, Serialize};
 use std::time::Duration;
+
 use discord_rpc_client::Client;
+use serde::{Deserialize, Serialize};
 
 pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
     let mut home;
@@ -46,18 +46,19 @@ pub fn load(game: &str, dir: &str, engine: &str, debug: bool) {
 
 fn discordClient(dir: &str) {
     //Ensure file was created
-    thread::sleep(Duration::new(5,0));
-    let testPath = Path::new(dir).join("discord.yml");
+    thread::sleep(Duration::new(5, 0));
+    let discord_file = Path::new(dir).join("discord.yml");
 
     let i = env!("DISCORD_KEY").parse().unwrap();
     let mut drpc = Client::new(i);
     drpc.start();
     println!("Starting Discord");
-    while testPath.exists() {
+    while discord_file.exists() {
         print!("test");
-        drpc.set_activity(|act| act.state("Running the Kakara Test"));
-
-        thread::sleep(Duration::new(5,0));
+        let testFile = fs::read_to_string(Path::new(dir).join("discord.yml"));
+        let discord: Discord = serde_yaml::from_str(&testFile.unwrap()).unwrap();
+        drpc.set_activity(|act| act.state(discord.current_task));
+        thread::sleep(Duration::new(5, 0));
     }
 }
 
@@ -74,4 +75,9 @@ struct Data {
 #[derive(Deserialize)]
 struct Launcher {
     arguments: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct Discord {
+    current_task: String
 }
