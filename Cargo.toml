@@ -1,5 +1,5 @@
 [package]
-name = "KLauncher"
+name = "klauncher"
 version = "0.1.0"
 authors = ["Wyatt Jacob Herkamp <wherkamp@kingtux.me>"]
 edition = "2018"
