@@ -2,6 +2,7 @@ extern crate clap;
 
 use clap::{App, Arg};
 
+mod osspec;
 mod gameloader;
 
 fn main() {

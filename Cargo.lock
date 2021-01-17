@@ -169,6 +169,7 @@ dependencies = [
  "discord-rpc-client",
  "serde",
  "serde_yaml",
+ "winapi 0.3.9",
 ]
 
 [[package]]
