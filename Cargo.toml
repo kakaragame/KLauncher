@@ -14,3 +14,5 @@ discord-rpc-client = "0.3.0"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser", "tlhelp32", "impl-default"] }

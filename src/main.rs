@@ -1,11 +1,13 @@
 extern crate clap;
 
+use clap::{App, Arg};
 use std::path::Path;
 
-use clap::{App, Arg};
 mod gameloader;
+mod osspec;
 mod engine;
- fn main() {
+
+fn main() {
     let matches = App::new("Kakara Game Launcher").
         version("1.0-SNAPSHOT").author("Wyatt Jacob Herkamp <wherkamp@kingtux.me>").about("Launches the Kakara game").
         arg(Arg::with_name("game").short("g").long("game").value_name("JAR_FILE").help("Takes the Kakara client").takes_value(true).required(true)).
@@ -26,5 +28,3 @@ mod engine;
     println!("Loading Game jar: {}", game_jar);
     gameloader::load(game_jar, working_directory, engine_jar)
 }
-
-
