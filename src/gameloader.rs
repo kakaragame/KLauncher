@@ -38,9 +38,10 @@ pub fn load(game: &str, dir: &str, engine: String) {
             java_command.arg(x);
         }
     }
-    let id = java_command.current_dir(dir)
-        .arg("-cp").arg(engine).
-        arg("-jar").arg(game).spawn().unwrap().id();
+    let id = java_command.current_dir(dir).
+       arg("-jar").arg(game).
+       arg("--engine=").arg(engine).
+        spawn().unwrap().id();
     unsafe { discord_client(dir, id ) }
 }
 
