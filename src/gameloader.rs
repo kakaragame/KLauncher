@@ -9,7 +9,7 @@ use serde::Deserialize;
 use crate::osspec;
 use discord_rpc_client::models::Activity;
 
-pub fn load(game: &str, dir: &str, engine: &str) {
+pub fn load(game: &str, dir: &str, engine: String) {
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
