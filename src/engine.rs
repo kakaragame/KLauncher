@@ -1,12 +1,12 @@
 extern crate reqwest;
 
 use std::fs;
-use std::fs::{File};
+use std::fs::{create_dir_all, File};
+use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
 
 use self::reqwest::Url;
-use std::io::Write;
 
 const LATEST_BUILD: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/";
 const LATEST_JAR: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/archives/";
@@ -22,7 +22,12 @@ pub async fn download_latest_build(workingDir: &str) -> String {
         if x.contains(get_native_name()) {
             let result = reqwest::get(Url::from_str(format!("{}{}", LATEST_JAR, x).as_str()).unwrap()).await.unwrap().bytes().await.unwrap();
             fs::create_dir_all("engine").unwrap();
-            let buf = Path::new(workingDir).join("engine").join(x);
+            let buf1 = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine");
+            if !buf1.exists() {
+                create_dir_all(buf1);
+            }
+            let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(x);
+            println!("{}", buf.as_path().as_os_str().to_str().unwrap());
             if !buf.exists() {
                 let mut file = File::create(buf).unwrap();
                 file.write_all(result.as_ref()).unwrap();

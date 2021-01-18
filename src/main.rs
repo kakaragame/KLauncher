@@ -1,7 +1,8 @@
 extern crate clap;
 
-use clap::{App, Arg};
 use std::path::Path;
+
+use clap::{App, Arg};
 
 mod gameloader;
 mod osspec;
@@ -23,7 +24,7 @@ fn main() {
     } else {
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
         let s = runtime.block_on(engine::download_latest_build(working_directory));
-        engine_jar = Path::new(working_directory).join("engine").join(s).to_str().unwrap().to_string();
+        engine_jar = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string();
         println!("{}", engine_jar);
     }
     println!("Loading Game jar: {}", game_jar);
