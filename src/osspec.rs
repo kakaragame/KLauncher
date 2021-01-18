@@ -1,10 +1,12 @@
-use core::mem;
-
 /**
     osspec is the file that defines os specific operations.
  */
 #[cfg(windows)]
 extern crate winapi;
+
+use core::mem;
+use std::fs;
+use std::path::Path;
 
 /**
    Find a process by its name.
@@ -38,7 +40,7 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
         return 0;
     }
 
-    let process_info_ptr : *mut PROCESSENTRY32= &mut process_info;
+    let process_info_ptr: *mut PROCESSENTRY32 = &mut process_info;
 
     tlhelp32::Process32First(processes_snapshot, process_info_ptr);
     let temp_exe_file = String::from_utf8(mem::transmute::<Vec<i8>, Vec<u8>>(remove_zeros(process_info.szExeFile.to_vec()))).unwrap();
@@ -61,13 +63,12 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
     return 0;
 
     /// Cut off unused indices in the szExeFile array.
-    fn remove_zeros(vec : Vec<i8>) -> Vec<i8> {
-        let mut output : Vec<i8> = Vec::new();
+    fn remove_zeros(vec: Vec<i8>) -> Vec<i8> {
+        let mut output: Vec<i8> = Vec::new();
         for mt in vec {
             if mt != 0 {
                 output.push(mt);
-            }
-            else{
+            } else {
                 return output;
             }
         }
@@ -76,7 +77,20 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
 }
 
 // TODO implement this.
-#[cfg(linux)]
+#[cfg(unix)]
 pub unsafe fn findProcessId(process_name: &str) -> u32 {
-    return 0;
+    let paths = fs::read_dir("/proc/").unwrap();
+    let mut result: u32 = 0;
+    for path in paths {
+        let entry = path.unwrap();
+        let file = Path::new(entry.path().as_path()).join("cmdline");
+        if file.exists() {
+            let contents = fs::read_to_string(file).expect("Something went wrong reading the file");
+            if contents.contains(process_name) {
+                let string = entry.path().as_path().to_str().unwrap().replace("/proc/", "");
+                result = string.parse().unwrap()
+            }
+        }
+    }
+    result
 }

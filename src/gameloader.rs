@@ -7,6 +7,7 @@ use discord_rpc_client::Client;
 use serde::{Deserialize};
 
 pub fn load(game: &str, dir: &str, engine: &str) {
+
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
