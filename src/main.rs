@@ -16,15 +16,16 @@ fn main() {
         get_matches();
     let game_jar = matches.value_of("game").unwrap_or("client.jar");
     let engine_jar: String;
+
+    let working_directory = matches.value_of("dir").unwrap_or("test");
     if matches.is_present("engine") {
         engine_jar = matches.value_of("engine").unwrap_or("engine.jar").parse().unwrap();
     } else {
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-        let s = runtime.block_on(engine::download_latest_build());
-        engine_jar = Path::new("engine").join(s).to_str().unwrap().parse().unwrap();
+        let s = runtime.block_on(engine::download_latest_build(working_directory));
+        engine_jar = Path::new(working_directory).join("engine").join(s).to_str().unwrap().to_string();
         println!("{}", engine_jar);
     }
-    let working_directory = matches.value_of("dir").unwrap_or("test");
     println!("Loading Game jar: {}", game_jar);
     gameloader::load(game_jar, working_directory, engine_jar)
 }
