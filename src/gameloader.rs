@@ -6,7 +6,10 @@ use std::time::Duration;
 use discord_rpc_client::Client;
 use serde::Deserialize;
 
-pub fn load(game: &str, dir: &str, engine: String) {
+use crate::osspec;
+use discord_rpc_client::models::Activity;
+
+pub fn load(game: &str, dir: &str, engine: &str) {
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
@@ -35,28 +38,29 @@ pub fn load(game: &str, dir: &str, engine: String) {
             java_command.arg(x);
         }
     }
-    java_command.current_dir(dir).
-        arg("-jar").arg(game).
-        arg(format!("{}={}", "--engine", engine)).
-        spawn().unwrap();
-    discord_client(dir)
+    let id = java_command.current_dir(dir)
+        .arg("-cp").arg(engine).
+        arg("-jar").arg(game).spawn().unwrap().id();
+    unsafe { discord_client(dir, id ) }
 }
 
-fn discord_client(dir: &str) {
+unsafe fn discord_client(dir: &str, id: u32) {
     //Ensure file was created
-    thread::sleep(Duration::new(5, 0));
     let discord_file = Path::new(dir).join("discord.yml");
 
     let i = env!("DISCORD_KEY").parse().unwrap();
     let mut drpc = Client::new(i);
     drpc.start();
     println!("Starting Discord");
-    while discord_file.exists() {
-        print!("test");
-        let test_file = fs::read_to_string(Path::new(dir).join("discord.yml"));
-        let discord: Discord = serde_yaml::from_str(&test_file.unwrap()).unwrap();
-        drpc.set_activity(|act| act.state(discord.current_task)).unwrap();
+    while osspec::is_process_running(&id) {
+        if discord_file.exists() {
+            let test_file = fs::read_to_string(Path::new(dir).join("discord.yml"));
+            let discord: Discord = serde_yaml::from_str(&test_file.unwrap()).unwrap();
+            drpc.set_activity(|act| act.state(discord.current_task)).unwrap();
+            thread::sleep(Duration::new(5, 0));
+        }
         thread::sleep(Duration::new(5, 0));
+
     }
 }
 
