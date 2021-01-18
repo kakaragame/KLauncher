@@ -10,6 +10,7 @@ use self::reqwest::Url;
 use std::io::Write;
 
 const LATEST_BUILD: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/";
+const LATEST_JAR: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/archives/";
 
 //engine-1.0-9-SNAPSHOT-natives-windows.jar
 pub async fn downloadLatestBuild() -> String {
@@ -20,7 +21,7 @@ pub async fn downloadLatestBuild() -> String {
     let mut respond: String = String::new();
     for x in vec {
         if x.contains(getNativeName()) {
-            let result = reqwest::get(Url::from_str(format!("{}{}", LATEST_BUILD, x).as_str()).unwrap()).await.unwrap().bytes().await.unwrap();
+            let result = reqwest::get(Url::from_str(format!("{}{}", LATEST_JAR, x).as_str()).unwrap()).await.unwrap().bytes().await.unwrap();
             fs::create_dir_all("engine");
             let buf = Path::new("engine").join(x);
             if !buf.exists() {
