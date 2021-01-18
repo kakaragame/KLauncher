@@ -40,7 +40,7 @@ pub fn load(game: &str, dir: &str, engine: String) {
     }
     let id = java_command.current_dir(dir).
        arg("-jar").arg(game).
-       arg("--engine=").arg(engine).
+       arg(format!("{}={}","--engine",engine)).
         spawn().unwrap().id();
     unsafe { discord_client(dir, id ) }
 }
