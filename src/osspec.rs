@@ -75,14 +75,42 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
         return output;
     }
 }
-//TODO implement windows support
+
+/**
+   Check if a process is running by its id.
+
+   This function uses the Window API to get the process.
+
+   # Params
+   process_id -> The process id to find. (Note: process ids can be recycled.)
+
+   # Returns
+   bool -> If the process is running.
+
+   # Examples
+   ```rust
+   let is_running : bool = osspec::is_process_running(555555);
+   ```
+*/
 #[cfg(windows)]
-pub unsafe fn is_process_running(process_id: &i32) -> bool {
-    false
+pub unsafe fn is_process_running(process_id: &u32) -> bool {
+    use winapi::um::winnt;
+    use winapi::um::tlhelp32;
+    use winapi::um;
+    use self::winapi::um::winnt::SYNCHRONIZE;
+    use self::winapi::shared::minwindef::FALSE;
+    use self::winapi::um::handleapi::CloseHandle;
+    use self::winapi::shared::winerror::WAIT_TIMEOUT;
+
+    let process : winnt::HANDLE = um::processthreadsapi::OpenProcess(SYNCHRONIZE, FALSE, *process_id);
+    let ret = um::synchapi::WaitForSingleObject(process, 0);
+    CloseHandle(process);
+
+    return ret == WAIT_TIMEOUT;
 }
 
 #[cfg(unix)]
-pub unsafe fn is_process_running(process_id: &i32) -> bool {
+pub unsafe fn is_process_running(process_id: &u32) -> bool {
     let mut result: bool = false;
     let file = Path::new("/proc").join(process_id.to_string()).join("cmdline");
     if file.exists() {
@@ -91,7 +119,6 @@ pub unsafe fn is_process_running(process_id: &i32) -> bool {
     result
 }
 
-// TODO implement this.
 #[cfg(unix)]
 pub unsafe fn find_process_id(process_name: &str) -> u32 {
     let paths = fs::read_dir("/proc/").unwrap();
