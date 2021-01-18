@@ -75,10 +75,24 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
         return output;
     }
 }
+//TODO implement windows support
+#[cfg(windows)]
+pub unsafe fn is_process_running(process_id: &i32) -> bool {
+}
+
+#[cfg(unix)]
+pub unsafe fn is_process_running(process_id: &i32) -> bool {
+    let mut result: bool = false;
+    let file = Path::new("/proc").join(process_id.to_string()).join("cmdline");
+    if file.exists() {
+        result = true;
+    }
+    result
+}
 
 // TODO implement this.
 #[cfg(unix)]
-pub unsafe fn findProcessId(process_name: &str) -> u32 {
+pub unsafe fn find_process_id(process_name: &str) -> u32 {
     let paths = fs::read_dir("/proc/").unwrap();
     let mut result: u32 = 0;
     for path in paths {
