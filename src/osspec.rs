@@ -78,6 +78,7 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
 //TODO implement windows support
 #[cfg(windows)]
 pub unsafe fn is_process_running(process_id: &i32) -> bool {
+    false
 }
 
 #[cfg(unix)]
