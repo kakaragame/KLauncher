@@ -1,15 +1,26 @@
 use std::{fs, thread};
-use std::path::Path;
+use std::fs::create_dir_all;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
 use discord_rpc_client::Client;
+use discord_rpc_client::models::Activity;
 use serde::Deserialize;
 
 use crate::osspec;
-use discord_rpc_client::models::Activity;
 
 pub fn load(game: &str, dir: &str, engine: String) {
+    let mut working = PathBuf::from(dir);
+    let mut game = fs::canonicalize(PathBuf::from(game)).unwrap();
+    let mut engine = fs::canonicalize(PathBuf::from(engine)).unwrap();
+    println!("[DEBUG] working directory: {}", working.to_str().unwrap());
+    println!("[DEBUG] engine: {}", engine.to_str().unwrap());
+    println!("[DEBUG] game: {}", game.to_str().unwrap());
+    working = fs::canonicalize(working).unwrap();
+    if !working.exists() {
+        create_dir_all(working.as_path());
+    }
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
@@ -26,12 +37,16 @@ pub fn load(game: &str, dir: &str, engine: String) {
     }
 
     home = home.join("settings.yml");
+    if !home.exists() {
+        panic!("User config not found in {}", home.to_str().unwrap())
+    }
     println!("Kakara Config {:?}", home.to_str());
     let yml_string = fs::read_to_string(home);
     let data: Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
     let mut java_command = Command::new(data.java);
     let test_path = Path::new(dir).join("test").join("test.yml");
     if test_path.exists() {
+        println!("[DEBUG] Using custom arguments");
         let test_file = fs::read_to_string(test_path);
         let data: Data = serde_yaml::from_str(&test_file.unwrap()).unwrap();
         for x in data.launcher.arguments {
@@ -39,10 +54,10 @@ pub fn load(game: &str, dir: &str, engine: String) {
         }
     }
     let id = java_command.current_dir(dir).
-       arg("-jar").arg(game).
-       arg(format!("{}={}","--engine",engine)).
+        arg("-jar").arg(game.to_str().unwrap()).
+        arg(format!("{}={}", "--engine", engine.to_str().unwrap())).
         spawn().unwrap().id();
-    unsafe { discord_client(dir, id ) }
+    unsafe { discord_client(dir, id) }
 }
 
 unsafe fn discord_client(dir: &str, id: u32) {
@@ -61,7 +76,6 @@ unsafe fn discord_client(dir: &str, id: u32) {
             thread::sleep(Duration::new(5, 0));
         }
         thread::sleep(Duration::new(5, 0));
-
     }
 }
 
