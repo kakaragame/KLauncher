@@ -95,7 +95,6 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
 #[cfg(windows)]
 pub unsafe fn is_process_running(process_id: &u32) -> bool {
     use winapi::um::winnt;
-    use winapi::um::tlhelp32;
     use winapi::um;
     use self::winapi::um::winnt::SYNCHRONIZE;
     use self::winapi::shared::minwindef::FALSE;
