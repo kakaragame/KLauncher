@@ -12,10 +12,23 @@ const LATEST_BUILD: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/las
 const LATEST_JAR: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/archives/";
 
 //engine-1.0-9-SNAPSHOT-natives-windows.jar
-pub async fn download_latest_build(workingDir: &str) -> String {
-    let resp = reqwest::get(Url::from_str(format!("{}{}", LATEST_BUILD, "files.txt").as_str()).unwrap()).await.unwrap().text().await.unwrap();
+/**
+    Downloads the latest engine build for the OS and returns the name.
 
-    let split = resp.split("\n");
+   # Params
+    working_dir -> Unused
+
+   # Returns
+    The name of the latest build
+
+   # Examples
+   ```rust
+    let name: String = engine::download_latest_build("unused");
+   ```
+*/
+pub async fn download_latest_build(working_dir: &str) -> String {
+    let resp = reqwest::get(Url::from_str(format!("{}{}", LATEST_BUILD, "files.txt").as_str()).unwrap()).await.unwrap().text().await.unwrap();
+    let split = resp.lines();
     let vec: Vec<&str> = split.collect();
     let mut response: String = String::new();
     for x in vec {
@@ -27,7 +40,7 @@ pub async fn download_latest_build(workingDir: &str) -> String {
                 create_dir_all(buf1);
             }
             let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(x);
-            println!("{}", buf.as_path().as_os_str().to_str().unwrap());
+            println!("[DEBUG] Downloaded: {}", buf.as_path().as_os_str().to_str().unwrap());
             if !buf.exists() {
                 let mut file = File::create(buf).unwrap();
                 file.write_all(result.as_ref()).unwrap();
@@ -42,9 +55,9 @@ pub async fn download_latest_build(workingDir: &str) -> String {
 
 fn get_native_name() -> &'static str {
     if cfg!(windows) {
-        "native-windows"
+        "natives-windows"
     } else if cfg!(linux) {
-        "native-linux"
+        "natives-linux"
     } else { "" }
 }
 

@@ -24,6 +24,11 @@ fn main() {
     } else {
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
         let s = runtime.block_on(engine::download_latest_build(working_directory));
+        if s == "" {
+            // If the engine version was not found.
+            println!("[ERROR] Unable to download engine version. Please provide an engine build with --engine");
+            return;
+        }
         engine_jar = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string();
         println!("{}", engine_jar);
     }
