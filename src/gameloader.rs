@@ -11,22 +11,24 @@ use serde::Deserialize;
 use crate::osspec;
 
 pub fn load(game: &str, dir: &str, engine: String) {
-    let mut working = PathBuf::from(dir);
-    let mut game = fs::canonicalize(PathBuf::from(game)).unwrap();
-    let mut engine = fs::canonicalize(PathBuf::from(engine)).unwrap();
-    println!("[DEBUG] working directory: {}", working.to_str().unwrap());
-    println!("[DEBUG] engine: {}", engine.to_str().unwrap());
-    println!("[DEBUG] game: {}", game.to_str().unwrap());
+    let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
+    let mut game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
+    let mut engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
+
     working = fs::canonicalize(working).unwrap();
+    println!("[DEBUG] working directory: {}", working.as_os_str().to_str().unwrap());
+    println!("[DEBUG] engine: {}", engine.as_os_str().to_str().unwrap());
+    println!("[DEBUG] game: {}", game.as_os_str().to_str().unwrap());
+
     if !working.exists() {
         create_dir_all(working.as_path());
     }
     if !engine.exists(){
-        panic!("Engine Jar not found in {}", engine.to_str().unwrap())
+        panic!("Engine Jar not found in {}", engine.as_os_str().to_str().unwrap())
 
     }
     if !game.exists(){
-        panic!("Game Jar not found in {}", game.to_str().unwrap())
+        panic!("Game Jar not found in {}", game.as_os_str().to_str().unwrap())
     }
     let mut home;
     // .kakara location is different depending on the OS.
@@ -61,8 +63,8 @@ pub fn load(game: &str, dir: &str, engine: String) {
         }
     }
     let id = java_command.current_dir(dir).
-        arg("-jar").arg(game.to_str().unwrap()).
-        arg(format!("{}={}", "--engine", engine.to_str().unwrap())).
+        arg("-jar").arg(game.as_os_str().to_str().unwrap()).
+        arg(format!("{}={}", "--engine", engine.as_os_str().to_str().unwrap())).
         spawn().unwrap().id();
     unsafe { discord_client(dir, id) }
 }
