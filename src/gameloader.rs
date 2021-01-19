@@ -21,6 +21,13 @@ pub fn load(game: &str, dir: &str, engine: String) {
     if !working.exists() {
         create_dir_all(working.as_path());
     }
+    if !engine.exists(){
+        panic!("Engine Jar not found in {}", engine.to_str().unwrap())
+
+    }
+    if !game.exists(){
+        panic!("Game Jar not found in {}", game.to_str().unwrap())
+    }
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
