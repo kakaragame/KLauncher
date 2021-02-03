@@ -1,7 +1,7 @@
 use std::{fs, thread};
 use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command};
 use std::time::Duration;
 
 use discord_rpc_client::Client;
@@ -23,11 +23,10 @@ pub fn load(game: &str, dir: &str, engine: String) {
     if !working.exists() {
         create_dir_all(working.as_path());
     }
-    if !engine.exists(){
+    if !engine.exists() {
         panic!("Engine Jar not found in {}", engine.as_os_str().to_str().unwrap())
-
     }
-    if !game.exists(){
+    if !game.exists() {
         panic!("Game Jar not found in {}", game.as_os_str().to_str().unwrap())
     }
     let mut home;
@@ -59,7 +58,9 @@ pub fn load(game: &str, dir: &str, engine: String) {
         let test_file = fs::read_to_string(test_path);
         let data: Data = serde_yaml::from_str(&test_file.unwrap()).unwrap();
         for x in data.launcher.arguments {
-            java_command.arg(x);
+            if !x.is_empty(){
+                java_command.arg(x);
+            }
         }
     }
     let id = java_command.current_dir(dir).
