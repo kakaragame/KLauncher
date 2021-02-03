@@ -8,8 +8,8 @@ use std::str::FromStr;
 
 use self::reqwest::Url;
 
-const LATEST_BUILD: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/";
-const LATEST_JAR: &str = "https://ci.potatocorp.dev/view/Kakara/job/Engine/lastSuccessfulBuild/artifact/archives/";
+const LATEST_BUILD: &str = "https://ci.kingtux.dev/view/Kakara/job/Kakara%20Engine%202/job/master/lastSuccessfulBuild/artifact/";
+const LATEST_JAR: &str = "https://ci.kingtux.dev/view/Kakara/job/Kakara%20Engine%202/job/master/lastSuccessfulBuild/artifact/archives/";
 
 //engine-1.0-9-SNAPSHOT-natives-windows.jar
 /**
