@@ -7,8 +7,11 @@ use clap::{App, Arg};
 mod gameloader;
 mod osspec;
 mod engine;
+mod jenkins;
 
 fn main() {
+    let result = jenkins::getBranchURL("master");
+    println!("{}", result.unwrap().url);
     let matches = App::new("Kakara Game Launcher").
         version("1.0-SNAPSHOT").author("Wyatt Jacob Herkamp <wherkamp@kingtux.me>").about("Launches the Kakara game").
         arg(Arg::with_name("game").short("g").long("game").value_name("JAR_FILE").help("Takes the Kakara client").takes_value(true).required(true)).
