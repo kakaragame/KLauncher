@@ -10,7 +10,7 @@ use std::fs::{create_dir_all, File};
 use std::io::Write;
 
 pub fn getBranchURL(branch: &str) -> Result<CommonJob, String> {
-    let jenkins = JenkinsBuilder::new(env!("JENKINS_URL")).build().unwrap();
+    let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
     let job = jenkins.get_job("Kakara Engine 2").unwrap().as_variant::<jenkins_api::job::WorkflowMultiBranchProject>().unwrap();
     let vec = job.jobs;
     let mut value = Result::Err(format!("Unable to find branch: {}", branch));
@@ -23,7 +23,7 @@ pub fn getBranchURL(branch: &str) -> Result<CommonJob, String> {
 }
 
 pub fn get_build_url(job: CommonJob) -> String {
-    let jenkins = JenkinsBuilder::new(env!("JENKINS_URL")).build().unwrap();
+    let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
 
     let build = job.last_build.unwrap();
     let build1 = build.get_full_build(&jenkins).unwrap();
