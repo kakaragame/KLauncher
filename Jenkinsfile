@@ -4,7 +4,8 @@ pipeline {
         stage ('Build') {
             steps {
              sh '''export PATH="$HOME/.cargo/bin:$PATH"
-             sh $HOME/secret_vars.sh
+             export DISCORD_KEY=${DISCORD_KEY}
+
              cargo build
              cargo build --target x86_64-pc-windows-gnu'''
             }
