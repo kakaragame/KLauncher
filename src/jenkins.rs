@@ -31,7 +31,20 @@ pub fn get_build_url(job: CommonJob) -> String {
     build1.url
 }
 
+/**
+   Download the engine jar.
+
+   # Params
+   url -> The url for the engine's jenkins (without the /artifact)
+
+   # Returns
+   String -> The name of the engine that was downloaded.
+
+*/
 pub async fn download_engine_jar(url: &str) -> String {
+    // TODO :: Replace this with progress bar.
+    println!("[STATUS] Starting download of Engine. Please Wait...");
+
     let input = format!("{}artifact/{}", url, "files.txt");
     let resp = reqwest::get(Url::from_str(input.as_str()).unwrap()).await.unwrap().text().await.unwrap();
     let split = resp.lines();
@@ -61,7 +74,20 @@ pub async fn download_engine_jar(url: &str) -> String {
 }
 //Kakara
 
+/**
+   Download the kakara game jar.
+
+   # Params
+   branch -> The branch that should be downloaded.
+
+   # Returns
+   Result<String, String> -> The result of the download.
+
+*/
 pub async fn download_game(branch: &str) -> Result<String, String> {
+    // TODO :: Replace this with progress bar.
+    println!("[STATUS] Starting download of Kakara. Please Wait...");
+
     let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
     let job = jenkins.get_job("Kakara").unwrap().as_variant::<jenkins_api::job::WorkflowMultiBranchProject>().unwrap();
     let vec = job.jobs;
@@ -94,7 +120,14 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
     returnValue
 }
 
+/**
+   Get the native name of the operating system.
+   (Only supports linux and windows)
 
+   # Returns
+   str -> The native name of the operating system.
+
+*/
 fn get_native_name() -> &'static str {
     if cfg!(windows) {
         "natives-windows"
