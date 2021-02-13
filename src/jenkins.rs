@@ -42,8 +42,7 @@ pub fn get_build_url(job: CommonJob) -> String {
 
 */
 pub async fn download_engine_jar(url: &str) -> String {
-    // TODO :: Replace this with progress bar.
-    println!("[STATUS] Starting download of Engine. Please Wait...");
+
 
     let input = format!("{}artifact/{}", url, "files.txt");
     let resp = reqwest::get(Url::from_str(input.as_str()).unwrap()).await.unwrap().text().await.unwrap();
@@ -53,18 +52,14 @@ pub async fn download_engine_jar(url: &str) -> String {
     for x in vec {
         if x.contains(get_native_name()) {
             let string = format!("{}artifact/archives/{}", url, x);
-            let result = reqwest::get(Url::from_str(string.as_str()).unwrap()).await.unwrap().bytes().await.unwrap();
             fs::create_dir_all("engine").unwrap();
             let buf1 = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine");
             if !buf1.exists() {
                 create_dir_all(buf1);
             }
             let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(x);
-            println!("[DEBUG] Downloaded: {}", buf.as_path().as_os_str().to_str().unwrap());
-            if !buf.exists() {
-                let mut file = File::create(buf).unwrap();
-                file.write_all(result.as_ref()).unwrap();
-            }
+            download(&string.as_str(), &buf.as_path(), "Kakara Engine", true).await;
+
 
             response = String::from(x);
             break;
@@ -85,9 +80,6 @@ pub async fn download_engine_jar(url: &str) -> String {
 
 */
 pub async fn download_game(branch: &str) -> Result<String, String> {
-    // TODO :: Replace this with progress bar.
-    println!("[STATUS] Starting download of Kakara. Please Wait...");
-
     let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
     let job = jenkins.get_job("Kakara").unwrap().as_variant::<jenkins_api::job::WorkflowMultiBranchProject>().unwrap();
     let vec = job.jobs;
@@ -98,26 +90,37 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
             let build = x.get_full_job(&jenkins).unwrap().last_build.unwrap().get_full_build(&jenkins).unwrap();
             for x in build.artifacts {
                 if (x.relative_path.starts_with("client/")) {
-
                     let value = (format!("{}artifact/{}", build.url, x.relative_path));
-                    let buf1 = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("game");
-                    if !buf1.exists() {
-                        create_dir_all(buf1);
-                    }
                     let string = x.file_name;
                     let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("game").join(string);
+                    download(&value, &buf.as_path(), "Kakara game", true).await;
                     returnValue = Result::Ok(String::from(buf.to_str().unwrap()));
-                    let result = reqwest::get(Url::from_str(value.as_str()).unwrap()).await.unwrap().bytes().await.unwrap();
-                    if !buf.exists() {
-                        let mut file = File::create(buf).unwrap();
-                        file.write_all(result.as_ref()).unwrap();
-                    }
                     break;
                 }
             }
         }
     }
     returnValue
+}
+
+pub async fn download(url: &str, location: &Path, what: &str, console_mode: bool) {
+    if console_mode {
+        //TODO add progress bar if console_mode == true
+        println!("Starting download of {}", what);
+    }
+    let x = location.parent().unwrap();
+    if !x.exists() {
+        create_dir_all(x);
+    }
+    let then = reqwest::get(Url::from_str(url).unwrap()).await;
+    let bytes = then.unwrap().bytes().await.unwrap();
+    if !location.exists() {
+        let mut file = File::create(location).unwrap();
+        file.write_all(bytes.as_ref()).unwrap();
+    }
+    if console_mode {
+        println!("Downloaded {} at location {} can be found at {}", what, url, location.to_str().unwrap());
+    }
 }
 
 /**
