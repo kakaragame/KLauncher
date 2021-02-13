@@ -7,6 +7,7 @@ use clap::{App, Arg};
 mod gameloader;
 mod osspec;
 mod jenkins;
+mod downloader;
 
 fn main() {
     let matches = App::new("Kakara Game Launcher").
@@ -38,7 +39,6 @@ fn main() {
             let vec = split.collect::<Vec<&str>>();
 
             let branch = vec.get(1).unwrap();
-            println!("{}", branch);
             let result = jenkins::getBranchURL(branch);
             let job = result.unwrap();
             let engine1 = jenkins::get_build_url(job);

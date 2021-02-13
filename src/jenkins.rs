@@ -8,6 +8,7 @@ use std::str::FromStr;
 
 use jenkins_api::JenkinsBuilder;
 use jenkins_api::job::{CommonJob, Job, ShortJob};
+use crate::downloader;
 use reqwest::Url;
 
 pub fn getBranchURL(branch: &str) -> Result<CommonJob, String> {
@@ -58,7 +59,7 @@ pub async fn download_engine_jar(url: &str) -> String {
                 create_dir_all(buf1);
             }
             let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(x);
-            download(&string.as_str(), &buf.as_path(), "Kakara Engine", true).await;
+            downloader::download(&string.as_str(), &buf.as_path(), "Kakara Engine").await.unwrap();
 
 
             response = String::from(x);
@@ -93,7 +94,7 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
                     let value = (format!("{}artifact/{}", build.url, x.relative_path));
                     let string = x.file_name;
                     let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("game").join(string);
-                    download(&value, &buf.as_path(), "Kakara game", true).await;
+                    downloader::download(&value, &buf.as_path(), "Kakara game").await.unwrap();
                     returnValue = Result::Ok(String::from(buf.to_str().unwrap()));
                     break;
                 }
@@ -103,25 +104,6 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
     returnValue
 }
 
-pub async fn download(url: &str, location: &Path, what: &str, console_mode: bool) {
-    if console_mode {
-        //TODO add progress bar if console_mode == true
-        println!("Starting download of {}", what);
-    }
-    let x = location.parent().unwrap();
-    if !x.exists() {
-        create_dir_all(x);
-    }
-    let then = reqwest::get(Url::from_str(url).unwrap()).await;
-    let bytes = then.unwrap().bytes().await.unwrap();
-    if !location.exists() {
-        let mut file = File::create(location).unwrap();
-        file.write_all(bytes.as_ref()).unwrap();
-    }
-    if console_mode {
-        println!("Downloaded {} at location {} can be found at {}", what, url, location.to_str().unwrap());
-    }
-}
 
 /**
    Get the native name of the operating system.
