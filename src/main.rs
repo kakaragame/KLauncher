@@ -4,6 +4,8 @@ use std::path::Path;
 
 use clap::{App, Arg};
 
+use crate::installer::install;
+
 mod gameloader;
 mod osspec;
 mod jenkins;
@@ -14,6 +16,12 @@ mod installer;
 mod settings;
 
 fn main() {
+    if !installer::is_installed() {
+        println!("Installing game");
+        let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
+        runtime.block_on(install());
+
+    }
     let matches = App::new("Kakara Game Launcher").
         version("1.0-SNAPSHOT").author("Wyatt Jacob Herkamp <wherkamp@kingtux.me>").about("Launches the Kakara game").
         arg(Arg::with_name("game").short("g").long("game").value_name("JAR_FILE").help("Takes the Kakara client").takes_value(true).required(false)).
@@ -28,7 +36,7 @@ fn main() {
 
         let branch = vec.get(1).unwrap();
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-        let s = runtime.block_on( jenkins::download_game(branch));
+        let s = runtime.block_on(jenkins::download_game(branch));
         game_jar = s.unwrap();
     } else {
         game_jar = String::from(x);
