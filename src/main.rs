@@ -8,6 +8,10 @@ mod gameloader;
 mod osspec;
 mod jenkins;
 mod downloader;
+mod jre;
+mod utils;
+mod installer;
+mod settings;
 
 fn main() {
     let matches = App::new("Kakara Game Launcher").

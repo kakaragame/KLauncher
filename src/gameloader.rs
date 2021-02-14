@@ -9,6 +9,7 @@ use discord_rpc_client::models::Activity;
 use serde::Deserialize;
 
 use crate::osspec;
+use crate::settings;
 
 pub fn load(game: &str, dir: &str, engine: String) {
     let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
@@ -50,7 +51,7 @@ pub fn load(game: &str, dir: &str, engine: String) {
     }
     println!("Kakara Config {:?}", home.to_str());
     let yml_string = fs::read_to_string(home);
-    let data: Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
+    let data: settings::Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
     let mut java_command = Command::new(data.java);
     let test_path = Path::new(dir).join("test").join("test.yml");
     if test_path.exists() {
@@ -89,10 +90,7 @@ unsafe fn discord_client(dir: &str, id: u32) {
     }
 }
 
-#[derive(Deserialize)]
-struct Settings {
-    java: String
-}
+
 
 #[derive(Deserialize)]
 struct Data {
