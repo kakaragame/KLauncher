@@ -68,6 +68,5 @@ pub fn extract(file: &Path, extractTo: &Path) {
 #[cfg(unix)]
 pub fn extract(file: &Path, extractTo: &Path) {
     //tar -xzvf {file} -C {extractTo}
-    let mut extract = Command::new("tar").arg("-xzvf").arg(file.to_str().unwrap()).arg("-C").arg(extractTo.to_str().unwrap());
-    extract.spawn().unwrap();
+     Command::new("tar").arg("-xzvf").arg(file.to_str().unwrap()).arg("-C").arg(extractTo.to_str().unwrap()).spawn().unwrap();
 }
