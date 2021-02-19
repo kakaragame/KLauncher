@@ -1,7 +1,7 @@
 use std::{fs, thread};
 use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
-use std::process::{Command};
+use std::process::Command;
 use std::time::Duration;
 
 use discord_rpc_client::Client;
@@ -10,6 +10,9 @@ use serde::Deserialize;
 
 use crate::osspec;
 use crate::settings;
+use crate::settings::Auth;
+use crate::settings::Launcher;
+use crate::settings::TestConfig;
 
 pub fn load(game: &str, dir: &str, engine: String) {
     let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
@@ -51,19 +54,26 @@ pub fn load(game: &str, dir: &str, engine: String) {
     }
     println!("Kakara Config {:?}", home.to_str());
     let yml_string = fs::read_to_string(home);
-    let data: settings::Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
-    let mut java_command = Command::new(data.java);
+    let settings: settings::Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
     let test_path = Path::new(dir).join("test").join("test.yml");
+
+    let test_file = fs::read_to_string(&test_path);
+    let mut java = settings.java;
+    let data: settings::TestConfig = serde_yaml::from_str(&test_file.unwrap()).unwrap();
+    if !data.launcher.jre.is_empty() {
+        java = data.launcher.jre;
+    }
+    let mut java_command = Command::new(java);
     if test_path.exists() {
         println!("[DEBUG] Using custom arguments");
-        let test_file = fs::read_to_string(test_path);
-        let data: Data = serde_yaml::from_str(&test_file.unwrap()).unwrap();
+
         for x in data.launcher.arguments {
-            if !x.is_empty(){
+            if !x.is_empty() {
                 java_command.arg(x);
             }
         }
     }
+
     let id = java_command.current_dir(dir).
         arg("-jar").arg(game.as_os_str().to_str().unwrap()).
         arg(format!("{}={}", "--engine", engine.as_os_str().to_str().unwrap())).
@@ -90,17 +100,6 @@ unsafe fn discord_client(dir: &str, id: u32) {
     }
 }
 
-
-
-#[derive(Deserialize)]
-struct Data {
-    launcher: Launcher,
-}
-
-#[derive(Deserialize)]
-struct Launcher {
-    arguments: Vec<String>,
-}
 
 #[derive(Deserialize)]
 struct Discord {

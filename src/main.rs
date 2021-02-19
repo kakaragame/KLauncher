@@ -14,6 +14,7 @@ mod jre;
 mod utils;
 mod installer;
 mod settings;
+mod test;
 
 fn main() {
     if !installer::is_installed() {
