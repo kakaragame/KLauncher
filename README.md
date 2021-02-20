@@ -1,4 +1,4 @@
-# KLauncher [![Build Status](https://ci.potatocorp.dev/view/Kakara/job/KLauncher/badge/icon)](https://ci.potatocorp.dev/view/Kakara/job/KLauncher/)
+# KLauncher [![Build Status](https://ci.potatocorp.dev/view/Kakara/job/KLauncher/job/master/badge/icon)](https://ci.potatocorp.dev/view/Kakara/job/KLauncher/)
 
 
 ## How to use
