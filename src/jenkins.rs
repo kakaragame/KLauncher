@@ -11,7 +11,7 @@ use jenkins_api::job::{CommonJob, Job, ShortJob};
 use crate::downloader;
 use reqwest::Url;
 
-pub fn getBranchURL(branch: &str) -> Result<CommonJob, String> {
+pub fn get_branch_url(branch: &str) -> Result<CommonJob, String> {
     let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
     let job = jenkins.get_job("Kakara Engine 2").unwrap().as_variant::<jenkins_api::job::WorkflowMultiBranchProject>().unwrap();
     let vec = job.jobs;
@@ -84,7 +84,7 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
     let jenkins = JenkinsBuilder::new("https://ci.potatocorp.dev/").build().unwrap();
     let job = jenkins.get_job("Kakara").unwrap().as_variant::<jenkins_api::job::WorkflowMultiBranchProject>().unwrap();
     let vec = job.jobs;
-    let mut returnValue = Result::Err(format!("Unable to find branch: {}", branch));
+    let mut return_value = Result::Err(format!("Unable to find branch: {}", branch));
 
     for x in vec {
         if x.name.eq(branch) {
@@ -95,13 +95,13 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
                     let string = x.file_name;
                     let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("game").join(string);
                     downloader::download(&value, &buf.as_path(), "Kakara game").await.unwrap();
-                    returnValue = Result::Ok(String::from(buf.to_str().unwrap()));
+                    return_value = Result::Ok(String::from(buf.to_str().unwrap()));
                     break;
                 }
             }
         }
     }
-    returnValue
+    return_value
 }
 
 

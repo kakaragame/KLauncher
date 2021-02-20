@@ -4,17 +4,30 @@ use std::path::Path;
 
 use clap::{App, Arg};
 
+use crate::installer::install;
+
 mod gameloader;
 mod osspec;
 mod jenkins;
 mod downloader;
+mod jre;
+mod utils;
+mod installer;
+mod settings;
+mod test;
 
 fn main() {
+    if !installer::is_installed() {
+        println!("Installing game");
+        let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
+        runtime.block_on(install());
+    }
     let matches = App::new("Kakara Game Launcher").
         version("1.0-SNAPSHOT").author("Wyatt Jacob Herkamp <wherkamp@kingtux.me>").about("Launches the Kakara game").
         arg(Arg::with_name("game").short("g").long("game").value_name("JAR_FILE").help("Takes the Kakara client").takes_value(true).required(false)).
         arg(Arg::with_name("engine").short("e").long("engine").value_name("JAR_FILE").help("Takes the Kakara Engine").takes_value(true).required(false)).
         arg(Arg::with_name("dir").short("w").long("working_dir").value_name("WORKING_DIRECTORY").help("What is the working directory for Kakara").takes_value(true).required(false)).
+        arg(Arg::with_name("test_mode").short("t").long("test_mode").takes_value(false).required(false)).
         get_matches();
     let x = matches.value_of("game").unwrap_or("client.jar");
     let game_jar: String;
@@ -24,7 +37,7 @@ fn main() {
 
         let branch = vec.get(1).unwrap();
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-        let s = runtime.block_on( jenkins::download_game(branch));
+        let s = runtime.block_on(jenkins::download_game(branch));
         game_jar = s.unwrap();
     } else {
         game_jar = String::from(x);
@@ -32,6 +45,13 @@ fn main() {
     let engine_jar: String;
 
     let working_directory = matches.value_of("dir").unwrap_or("test");
+    let working_directory_path = Path::new(working_directory.clone());
+    if matches.is_present("test_mode") {
+        if !test::is_installed(&working_directory_path) {
+            test::install(&working_directory_path);
+
+        }
+    }
     if matches.is_present("engine") {
         let engine_string: String = matches.value_of("engine").unwrap_or("engine.jar").parse().unwrap();
         if engine_string.starts_with("jenkins") {
@@ -39,7 +59,7 @@ fn main() {
             let vec = split.collect::<Vec<&str>>();
 
             let branch = vec.get(1).unwrap();
-            let result = jenkins::getBranchURL(branch);
+            let result = jenkins::get_branch_url(branch);
             let job = result.unwrap();
             let engine1 = jenkins::get_build_url(job);
             let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
@@ -54,7 +74,7 @@ fn main() {
             engine_jar = engine_string;
         }
     } else {
-        let result = jenkins::getBranchURL("master");
+        let result = jenkins::get_branch_url("master");
         let job = result.unwrap();
         let engine1 = jenkins::get_build_url(job);
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
