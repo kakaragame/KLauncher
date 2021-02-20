@@ -19,7 +19,7 @@ pub fn install(working_directory: &Path) {
     };
     let mut buf = working_directory.clone().join("test");
     if !buf.exists(){
-        create_dir_all(&buf).unwrap;
+        create_dir_all(&buf).unwrap();
     }
     buf = buf.join("test.yml");
     let result = serde_yaml::to_string(&config).unwrap();
