@@ -6,12 +6,12 @@ use std::time::Duration;
 
 use discord_rpc_client::Client;
 use serde::Deserialize;
-
+use crate::kconfig::TestConfig;
+use crate::kconfig::Auth;
+use crate::kconfig::Launcher;
+use crate::kconfig::Settings;
 use crate::osspec;
-use crate::settings;
-use crate::settings::Auth;
-use crate::settings::Launcher;
-use crate::settings::TestConfig;
+
 
 pub fn load(game: &str, dir: &str, engine: String) {
     let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
@@ -53,12 +53,12 @@ pub fn load(game: &str, dir: &str, engine: String) {
     }
     println!("Kakara Config {:?}", home.to_str());
     let yml_string = fs::read_to_string(home);
-    let settings: settings::Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
+    let settings: Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
     let test_path = Path::new(dir).join("test").join("test.yml");
 
     let test_file = fs::read_to_string(&test_path);
     let mut java = settings.java;
-    let data: settings::TestConfig = serde_yaml::from_str(&test_file.unwrap()).unwrap();
+    let data: TestConfig = serde_yaml::from_str(&test_file.unwrap()).unwrap();
     if !data.launcher.jre.is_empty() {
         java = data.launcher.jre;
     }

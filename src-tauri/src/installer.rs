@@ -2,8 +2,8 @@ use std::fs;
 use std::fs::create_dir_all;
 
 use crate::jre::download_jre;
-use crate::settings::Settings;
 use crate::utils;
+use crate::kconfig::Settings;
 
 pub fn is_installed() -> bool {
     utils::get_kakara_folder().join("settings.yml").exists()

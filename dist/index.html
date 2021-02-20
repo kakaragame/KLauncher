@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div>
+    <button id="log">Call Log API</button>
+    <button id="request">Call Request (async) API</button>
+    <button id="event">Send event to Rust</button>
+    <div id="response"></div>
+</div>
+<script>
+    document.getElementById("log").addEventListener("click", function () {
+        console.log("log");
+        window.__TAURI__.tauri.invoke({
+            cmd: "logOperation",
+            event: "tauri-click",
+            payload: "this payload is optional because we used Option in Rust",
+        });
+    });
+
+    document.getElementById("request").addEventListener("click", function () {
+        window.__TAURI__.tauri
+            .invoke({
+                cmd: "performRequest",
+                endpoint: "dummy endpoint arg",
+                body: {
+                    id: 5,
+                    name: "test",
+                },
+            })
+            .then(registerResponse)
+            .catch(registerResponse);
+    });
+
+    document.getElementById("event").addEventListener("click", function () {
+        window.__TAURI__.event.emit("js-event", "this is the payload string");
+    });
+</script>
+</body>
+</html>
