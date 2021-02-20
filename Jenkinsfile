@@ -5,6 +5,7 @@ pipeline {
             steps {
              sh '''export PATH="$HOME/.cargo/bin:$PATH"
 
+             yarn install
              yarn tauri build'''
             }
             post {
