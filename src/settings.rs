@@ -31,15 +31,25 @@ impl Launcher {
     pub fn new() -> Launcher {
         Launcher {
             arguments: Vec::new(),
-            jre: String::from("")
+            jre: String::from(""),
         }
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Auth {
-    pub authPackage: String,
+    pub auth_package: String,
     pub uuid: String,
-    pub authKey: String,
+    pub auth_key: String,
 
+}
+
+impl Auth {
+    pub fn new() -> Auth {
+        Auth {
+            auth_package: String::from(""),
+            uuid: String::from(""),
+            auth_key: String::from(""),
+        }
+    }
 }

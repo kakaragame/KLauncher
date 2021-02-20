@@ -17,6 +17,5 @@ futures = "0.3"
 jenkins_api = "0.8.0"
 indicatif = "0.15.0"
 zip = "0.5"
-shrust = "0.0.7"
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "tlhelp32", "processthreadsapi", "synchapi", "impl-default"] }

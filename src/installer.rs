@@ -12,7 +12,7 @@ pub fn is_installed() -> bool {
 pub async fn install() {
     let buf = utils::get_kakara_folder();
     if !buf.exists() {
-        create_dir_all(buf);
+        create_dir_all(buf).unwrap();
     }
     let mut jre = download_jre().await;
     let java_location = jre.to_str().unwrap();

@@ -36,17 +36,17 @@ pub async fn download_jre() -> PathBuf {
     let mut folder = utils::get_kakara_folder().join("jre");
     let downloads = utils::get_kakara_folder().join("downloads");
     if folder.exists() {
-        remove_dir_all(&folder);
+        remove_dir_all(&folder).unwrap();
     }
     if downloads.exists() {
-        remove_dir_all(&downloads);
+        remove_dir_all(&downloads).unwrap();
     }
 
-    create_dir_all(&downloads);
-    create_dir_all(&folder);
+    create_dir_all(&downloads).unwrap();
+    create_dir_all(&folder).unwrap();
 
     let jre_download = downloads.join(format!("download.{}", get_file_extension()));
-    downloader::download(&url, &jre_download, &"Jre 11").await;
+    downloader::download(&url, &jre_download, &"Jre 11").await.unwrap();
     extract(&jre_download, &folder);
     let file1 = fs::read_dir(&folder).unwrap();
 
@@ -59,10 +59,10 @@ pub async fn download_jre() -> PathBuf {
 }
 
 #[cfg(windows)]
-pub fn extract(file: &Path, extractTo: &Path) {
+pub fn extract(file: &Path, extract_to: &Path) {
     let mut file = File::open(&file);
     let mut archive = zip::ZipArchive::new(file.unwrap()).unwrap();
-    archive.extract(extractTo);
+    archive.extract(extract_to).unwrap();
 }
 
 #[cfg(unix)]

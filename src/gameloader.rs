@@ -5,7 +5,6 @@ use std::process::Command;
 use std::time::Duration;
 
 use discord_rpc_client::Client;
-use discord_rpc_client::models::Activity;
 use serde::Deserialize;
 
 use crate::osspec;
