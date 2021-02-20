@@ -5,12 +5,11 @@ pipeline {
             steps {
              sh '''export PATH="$HOME/.cargo/bin:$PATH"
 
-             cargo build
-             cargo build --target x86_64-pc-windows-gnu'''
+             yarn tauri build'''
             }
             post {
                 success {
-archiveArtifacts artifacts: 'target/debug/klauncher, target/x86_64-pc-windows-gnu/debug/klauncher.exe', followSymlinks: false
+                  archiveArtifacts artifacts: 'src-tauri/target/release/bundle/**/*', followSymlinks: false
                 }
             }
         }
