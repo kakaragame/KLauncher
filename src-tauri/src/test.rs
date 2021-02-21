@@ -1,11 +1,11 @@
 use std::path::Path;
-use crate::settings;
-use crate::settings::Auth;
-use crate::settings::Launcher;
-use crate::settings::TestConfig;
+
 use std::fs::create_dir_all;
 use std::fs;
-
+use crate::kconfig::TestConfig;
+use crate::kconfig::Auth;
+use crate::kconfig::Launcher;
+use crate::kconfig::Settings;
 pub fn is_installed(path: &Path) -> bool {
     path.clone().join("test").join("test.yml").exists()
 }
