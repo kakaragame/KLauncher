@@ -32,7 +32,7 @@ fn main() {
         version("1.0-SNAPSHOT").author("Wyatt Jacob Herkamp <wherkamp@kingtux.me>").about("Launches the Kakara game").
         arg(Arg::with_name("game").short("g").long("game").value_name("JAR_FILE").help("Takes the Kakara client").takes_value(true).required(false)).
         arg(Arg::with_name("engine").short("e").long("engine").value_name("JAR_FILE").help("Takes the Kakara Engine").takes_value(true).required(false)).
-        arg(Arg::with_name("dir").short("w").long("working_dir").value_name("WORKING_DIRECTORY").help("What is the working directory for Kakara").takes_value(true).required(false)).
+        arg(Arg::with_name("dir").short("w").long("working_dir").value_name("WORKING_DIRECTORY").help("What is the working directory for Kakara").default_value("{KAKARA_HOME}/game").takes_value(true).required(false)).
         arg(Arg::with_name("test_mode").short("t").long("test_mode").takes_value(false).required(false)).
         get_matches();
     if matches.is_present("game") && matches.is_present("engine")  {
