@@ -12,6 +12,8 @@ mod kconfig;
 mod osspec;
 mod utils;
 mod test;
+mod jenkins;
+mod profile;
 
 fn main() {
   tauri::AppBuilder::new()
