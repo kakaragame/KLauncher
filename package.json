@@ -1,4 +1,14 @@
 {
+  "name": "klauncher",
+  "version": "1.0.0",
+  "description": "The launcher for Kakara.",
+  "index": "tauri",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev"
+  },
+  "author": "Kakara",
+  "license": "MIT",
   "dependencies": {
     "bootstrap": "4.6.0",
     "tauri": "^0.14.1"
