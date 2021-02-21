@@ -41,13 +41,13 @@ impl GameProfile {
 
     pub fn new(name: String, version: String, engine_version: String, test_mode: bool) -> GameProfile {
         GameProfile {
-            name: name,
-            version: version,
-            engine_version: engine_version,
+            name,
+            version,
+            engine_version,
             jre: String::new(),
             game_directory: String::new(),
             jvm_args: Vec::new(),
-            test_mode: test_mode,
+            test_mode,
         }
     }
     pub fn update_profile(profile: GameProfile) {
