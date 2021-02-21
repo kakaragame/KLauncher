@@ -1,4 +1,8 @@
-#[derive(Serialize, Deserialize)]
+use crate::utils;
+use std::fs;
+use serde::{Serialize, Deserialize, Serializer};
+
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct GameProfile {
     pub name: String,
     pub jre: String,
@@ -12,6 +16,7 @@ pub(crate) struct GameProfile {
 
 }
 
+
 impl GameProfile {
     pub fn set_jre(&mut self, jre: String) {
         self.jre = jre;
@@ -22,9 +27,7 @@ impl GameProfile {
     pub fn set_engine_version(&mut self, version: String) {
         self.engine_version = version;
     }
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
+
     pub fn set_jvm(&mut self, jvm: String) {
         self.jre = jvm;
     }
@@ -51,16 +54,50 @@ impl GameProfile {
         }
     }
     pub fn update_profile(profile: GameProfile) {
-        //TODO implement
+        let mut profiles = GameProfile::get_profiles();
+
+        for mut x in profiles {
+            if x.name.eq(&profile.name) {
+                x = profile.clone();
+            }
+        }
     }
     pub fn del_profile(profile: GameProfile) {
-        //TODO implement
+        let mut profiles = GameProfile::get_profiles();
+
+        for (pos, e) in profiles.iter().enumerate() {
+            if e.name.eq(&profile.name) {
+                profiles.remove(pos);
+                break;
+            }
+        }
     }
     pub fn add_profile(profile: GameProfile) {
-        //TODO implement
+        let mut profiles = GameProfile::get_profiles();
+        profiles.push(profile);
+        GameProfile::save_profiles(profiles)
+    }
+    fn save_profiles(profiles: Vec<GameProfile>) {
+        let result = serde_json::to_string(&profiles).unwrap();
+        let file = utils::get_kakara_folder().join("profiles.json");
+        if file.exists() {
+            let result1 = fs::remove_file(&file);
+            if result1.is_err() {
+                panic!("Cannot save profile. We probably shouldn't do this.")
+            }
+        }
+        let result2 = fs::write(&file, &result);
+        if result2.is_err() {
+            panic!("Cannot save profile. We probably shouldn't do this.")
+        }
     }
     pub fn get_profiles() -> Vec<GameProfile> {
-        //TODO implement
-        Vec::new()
+        let file = utils::get_kakara_folder().join("profiles.json");
+        let file_content = fs::read_to_string(&file);
+        if file_content.is_err() {
+            panic!("Cannot read profiles. We probably shouldn't do this.")
+        }
+        let profiles: Vec<GameProfile> = serde_json::from_str(&file_content.unwrap()).unwrap();
+        return profiles;
     }
 }
