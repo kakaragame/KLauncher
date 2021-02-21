@@ -1,6 +1,8 @@
 use crate::utils;
 use std::fs;
 use serde::{Serialize, Deserialize, Serializer};
+use crate::error::KError;
+use crate::error::Level;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct GameProfile {
@@ -53,17 +55,28 @@ impl GameProfile {
             test_mode,
         }
     }
-    pub fn update_profile(profile: GameProfile) {
-        let mut profiles = GameProfile::get_profiles();
+    pub fn update_profile(profile: GameProfile) -> Result<(), KError> {
+        let result = GameProfile::get_profiles();
 
-        for mut x in profiles {
+        if result.is_err() {
+            return Err(result.err().unwrap());
+        }
+        let mut profiles = result.ok().unwrap();
+
+        for mut x in profiles{
             if x.name.eq(&profile.name) {
                 x = profile.clone();
             }
         }
+        return Ok(());
     }
-    pub fn del_profile(profile: GameProfile) {
-        let mut profiles = GameProfile::get_profiles();
+    pub fn del_profile(profile: GameProfile) -> Result<(), KError> {
+        let result = GameProfile::get_profiles();
+
+        if result.is_err() {
+            return Err(result.err().unwrap());
+        }
+        let mut profiles = result.ok().unwrap();
 
         for (pos, e) in profiles.iter().enumerate() {
             if e.name.eq(&profile.name) {
@@ -71,33 +84,43 @@ impl GameProfile {
                 break;
             }
         }
+        return Ok(());
     }
-    pub fn add_profile(profile: GameProfile) {
-        let mut profiles = GameProfile::get_profiles();
+    pub fn add_profile(profile: GameProfile) -> Result<(), KError> {
+        let result = GameProfile::get_profiles();
+
+        if result.is_err() {
+            return Err(result.err().unwrap());
+        }
+        let mut profiles = result.ok().unwrap();
+
+
         profiles.push(profile);
-        GameProfile::save_profiles(profiles)
+        GameProfile::save_profiles(profiles);
+        return Ok(());
     }
-    fn save_profiles(profiles: Vec<GameProfile>) {
+    fn save_profiles(profiles: Vec<GameProfile>) -> Result<(), KError> {
         let result = serde_json::to_string(&profiles).unwrap();
         let file = utils::get_kakara_folder().join("profiles.json");
         if file.exists() {
             let result1 = fs::remove_file(&file);
             if result1.is_err() {
-                panic!("Cannot save profile. We probably shouldn't do this.")
+                return Err(KError::new_medium("Unable to delete file"));
             }
         }
         let result2 = fs::write(&file, &result);
         if result2.is_err() {
-            panic!("Cannot save profile. We probably shouldn't do this.")
+            return Err(KError::new_medium("Unable to save file"));
         }
+        Ok(())
     }
-    pub fn get_profiles() -> Vec<GameProfile> {
+    pub fn get_profiles() -> Result<Vec<GameProfile>, KError> {
         let file = utils::get_kakara_folder().join("profiles.json");
         let file_content = fs::read_to_string(&file);
         if file_content.is_err() {
-            panic!("Cannot read profiles. We probably shouldn't do this.")
+            return Err(KError::new_severe("Unable to read file"));
         }
         let profiles: Vec<GameProfile> = serde_json::from_str(&file_content.unwrap()).unwrap();
-        return profiles;
+        return Ok(profiles);
     }
 }

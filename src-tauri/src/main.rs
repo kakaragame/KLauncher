@@ -14,6 +14,7 @@ mod utils;
 mod test;
 mod jenkins;
 mod profile;
+mod error;
 
 fn main() {
   tauri::AppBuilder::new()
