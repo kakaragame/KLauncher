@@ -7,18 +7,18 @@ use std::time::Duration;
 use discord_rpc_client::Client;
 use serde::Deserialize;
 
-use crate::osspec;
+use crate::{LauncherError, osspec};
 use crate::settings;
 use crate::settings::Auth;
 use crate::settings::Launcher;
 use crate::settings::TestConfig;
 
-pub fn load(game: &str, dir: &str, engine: String) {
+pub fn load(game: &str, dir: &str, engine: String) ->Result<(), LauncherError>{
     let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
     let mut game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
     let mut engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
 
-    working = fs::canonicalize(working).unwrap();
+    //working = fs::canonicalize(working)?;
     println!("[DEBUG] working directory: {}", working.as_os_str().to_str().unwrap());
     println!("[DEBUG] engine: {}", engine.as_os_str().to_str().unwrap());
     println!("[DEBUG] game: {}", game.as_os_str().to_str().unwrap());
@@ -78,6 +78,7 @@ pub fn load(game: &str, dir: &str, engine: String) {
         arg(format!("{}={}", "--engine", engine.as_os_str().to_str().unwrap())).
         spawn().unwrap().id();
     unsafe { discord_client(dir, id) }
+    return Ok(())
 }
 
 unsafe fn discord_client(dir: &str, id: u32) {

@@ -3,6 +3,9 @@ extern crate clap;
 use std::path::Path;
 
 use clap::{App, Arg};
+use nitro_log::config::Config;
+use nitro_log::NitroLogger;
+use crate::error::LauncherError;
 
 use crate::installer::install;
 
@@ -15,8 +18,12 @@ mod utils;
 mod installer;
 mod settings;
 mod test;
+pub mod error;
 
-fn main() {
+fn main() ->Result<(),LauncherError>{
+    let logger_config = include_str!("log.json");
+    let config: Config = serde_json::from_str(logger_config).unwrap();
+    NitroLogger::load(config, None).unwrap();
     if !installer::is_installed() {
         println!("Installing game");
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
@@ -52,41 +59,31 @@ fn main() {
 
         }
     }
-    if matches.is_present("engine") {
+    let engine_jar =if matches.is_present("engine") {
         let engine_string: String = matches.value_of("engine").unwrap_or("engine.jar").parse().unwrap();
         if engine_string.starts_with("jenkins") {
             let split = engine_string.split(":");
             let vec = split.collect::<Vec<&str>>();
 
             let branch = vec.get(1).unwrap();
-            let result = jenkins::get_branch_url(branch);
-            let job = result.unwrap();
-            let engine1 = jenkins::get_build_url(job);
             let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-            let s = runtime.block_on(jenkins::download_engine_jar(&*engine1));
+            let s :String= runtime.block_on(jenkins::download_engine_jar(&branch))?;
             if s == "" {
-                // If the engine version was not found.
-                println!("[ERROR] Unable to download engine version. Please provide an engine build with --engine");
-                return;
+                return Err(LauncherError::Custom("[ERROR] Unable to download engine version. Please provide an engine build with --engine".to_string()));
             }
-            engine_jar = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string();
+            Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string()
         } else {
-            engine_jar = engine_string;
+            engine_string
         }
     } else {
-        let result = jenkins::get_branch_url("master");
-        let job = result.unwrap();
-        let engine1 = jenkins::get_build_url(job);
+
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-        let s = runtime.block_on(jenkins::download_engine_jar(&*engine1));
+        let s = runtime.block_on(jenkins::download_engine_jar("master"))?;
         if s == "" {
-            // If the engine version was not found.
-            println!("[ERROR] Unable to download engine version. Please provide an engine build with --engine");
-            return;
+            return Err(LauncherError::Custom("[ERROR] Unable to download engine version. Please provide an engine build with --engine".to_string()));
         }
-        engine_jar = Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string();
-        println!("{}", engine_jar);
-    }
+        Path::new(std::env::current_exe().unwrap().parent().unwrap()).join("engine").join(s).to_str().unwrap().to_string()
+    };
     println!("Loading Game jar: {}", game_jar);
     gameloader::load(game_jar.as_str(), working_directory, engine_jar)
 }

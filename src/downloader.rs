@@ -10,22 +10,23 @@ use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::{Client, header};
 use reqwest::Url;
+use crate::error::LauncherError;
 
-pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), String> {
+pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), LauncherError> {
     if location.exists(){
         return Ok(());
     }
     println!("Downloading {}", what);
     let x = location.parent().unwrap();
     if !x.exists() {
-        create_dir_all(x);
+        create_dir_all(x)?;
     }
 
     let url = Url::parse(url).unwrap();
     let client = Client::new();
 
     let total_size = {
-        let resp = client.head(url.as_str()).send().await.unwrap();
+        let resp = client.head(url.as_str()).send().await?;
         if resp.status().is_success() {
             resp.headers()
                 .get(header::CONTENT_LENGTH)
@@ -33,7 +34,7 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Stri
                 .and_then(|ct_len| ct_len.parse().ok())
                 .unwrap_or(0)
         } else {
-            return Err(String::from("Failed to download file"));
+            return Err(LauncherError::from(resp.status()));
         }
     };
 
@@ -54,11 +55,11 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Stri
     let mut dest = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(location).unwrap();
+        .open(location)?;
 
 
-    let mut source = request.send().await.unwrap();
-    while let Some(chunk) = source.chunk().await.unwrap() {
+    let mut source = request.send().await?;
+    while let Some(chunk) = source.chunk().await? {
         dest.write_all(&chunk);
         pb.inc(chunk.len() as u64);
     }
