@@ -32,7 +32,7 @@ fn get_java_exec() -> &'static str {
 }
 
 pub async fn download_jre() -> PathBuf {
-    let url = format!("https://api.adoptopenjdk.net/v3/binary/latest/11/ga/{}/x64/jre/hotspot/normal/adoptopenjdk?project=jdk", get_jre_version());
+    let url = format!("https://api.adoptium.net/v3/binary/latest/17/ga/{}/x64/jre/hotspot/normal/eclipse?project=jdk", get_jre_version());
     println!("{}", &url);
     let mut folder = utils::get_kakara_folder().join("jre");
     let downloads = utils::get_kakara_folder().join("downloads");
@@ -47,7 +47,7 @@ pub async fn download_jre() -> PathBuf {
     create_dir_all(&folder).unwrap();
 
     let jre_download = downloads.join(format!("download.{}", get_file_extension()));
-    let result = downloader::download(&url, &jre_download, &"Jre 11").await;
+    let result = downloader::download(&url, &jre_download, &"JRE 17").await;
     if result.is_err(){
         println!("Unable to download {}", result.err().unwrap());
         panic!("Unable to download JRE");
