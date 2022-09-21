@@ -4,7 +4,6 @@ use std::fs::create_dir_all;
 use std::io::Write;
 use std::{
     fs,
-    io::{self, copy, Read},
     path::Path,
 };
 

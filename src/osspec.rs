@@ -5,8 +5,8 @@
 extern crate winapi;
 
 use core::mem;
-use std::fs;
-use std::path::Path;
+
+
 
 /**
    Find a process by its name.
@@ -32,8 +32,10 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
     use winapi::um::winnt;
     use winapi::um::winuser::WM_NULL;
 
-    let mut process_info: tlhelp32::PROCESSENTRY32 = tlhelp32::PROCESSENTRY32::default();
-    process_info.dwSize = mem::size_of::<tlhelp32::PROCESSENTRY32>() as u32;
+    let mut process_info: tlhelp32::PROCESSENTRY32 = tlhelp32::PROCESSENTRY32 {
+        dwSize: mem::size_of::<tlhelp32::PROCESSENTRY32>() as u32,
+        ..tlhelp32::PROCESSENTRY32::default()
+    };
 
     let processes_snapshot: winnt::HANDLE =
         tlhelp32::CreateToolhelp32Snapshot(tlhelp32::TH32CS_SNAPPROCESS, WM_NULL);
@@ -59,7 +61,7 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
             process_info.szExeFile.to_vec(),
         )))
         .unwrap();
-        let exe_file = temp_exe_file.split(" ").next().unwrap();
+        let exe_file = temp_exe_file.split(' ').next().unwrap();
         if process_name == exe_file {
             CloseHandle(processes_snapshot);
             return process_info.th32ProcessID;
@@ -79,7 +81,7 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
                 return output;
             }
         }
-        return output;
+        output
     }
 }
 
@@ -113,7 +115,7 @@ pub unsafe fn is_process_running(process_id: &u32) -> bool {
     let ret = um::synchapi::WaitForSingleObject(process, 0);
     CloseHandle(process);
 
-    return ret == WAIT_TIMEOUT;
+    ret == WAIT_TIMEOUT
 }
 
 #[cfg(unix)]

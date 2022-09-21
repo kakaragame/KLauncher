@@ -2,8 +2,8 @@
 
 use std::fs::{create_dir_all, remove_dir_all, File};
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{fs, thread, time};
+
+use std::{fs};
 
 use crate::{downloader, utils};
 
@@ -53,17 +53,17 @@ pub async fn download_jre() -> PathBuf {
     create_dir_all(&folder).unwrap();
 
     let jre_download = downloads.join(format!("download.{}", get_file_extension()));
-    let result = downloader::download(&url, &jre_download, &"JRE 17").await;
+    let result = downloader::download(&url, &jre_download, "JRE 17").await;
     if result.is_err() {
         println!("Unable to download {}", result.err().unwrap());
         panic!("Unable to download JRE");
     }
     extract(&jre_download, &folder);
 
-    let file1 = fs::read_dir(&folder).unwrap();
-    for x in file1 {
-        folder = folder.join(x.unwrap().file_name().to_str().unwrap());
-        break;
+    let mut file1 = fs::read_dir(&folder).unwrap();
+    if let Some(file) = file1.next() {
+        folder = folder.join(file.unwrap().file_name().to_str().unwrap());
+
     }
 
     folder.join("bin").join(get_java_exec())
@@ -71,7 +71,7 @@ pub async fn download_jre() -> PathBuf {
 
 #[cfg(windows)]
 pub fn extract(file: &Path, extract_to: &Path) {
-    let mut file = File::open(&file);
+    let file = File::open(&file);
     let mut archive = zip::ZipArchive::new(file.unwrap()).unwrap();
     archive.extract(extract_to).unwrap();
 }

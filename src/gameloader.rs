@@ -8,15 +8,15 @@ use discord_rpc_client::Client;
 use serde::Deserialize;
 
 use crate::settings;
-use crate::settings::Auth;
-use crate::settings::Launcher;
-use crate::settings::TestConfig;
+
+
+
 use crate::{osspec, LauncherError};
 
 pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> {
-    let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
-    let mut game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
-    let mut engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
+    let working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
+    let game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
+    let engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
 
     //working = fs::canonicalize(working)?;
     println!(
@@ -101,7 +101,7 @@ pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> 
         .unwrap()
         .id();
     unsafe { discord_client(dir, id) }
-    return Ok(());
+    Ok(())
 }
 
 unsafe fn discord_client(dir: &str, id: u32) {

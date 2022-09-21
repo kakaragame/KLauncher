@@ -14,7 +14,7 @@ pub async fn install() {
     if !buf.exists() {
         create_dir_all(buf).unwrap();
     }
-    let mut jre = download_jre().await;
+    let jre = download_jre().await;
     let java_location = jre.to_str().unwrap();
     let settings = Settings {
         java: java_location.parse().unwrap(),

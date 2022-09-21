@@ -1,11 +1,11 @@
-
+#![allow(unused,dead_code)]
+//#![deny(deprecated, deprecated_in_future)]
 
 use std::path::Path;
 
 use crate::error::LauncherError;
 use clap::{App, Arg};
-use nitro_log::config::Config;
-use nitro_log::NitroLogger;
+
 
 use crate::installer::install;
 
@@ -21,7 +21,7 @@ mod test;
 mod utils;
 
 fn main() -> Result<(), LauncherError> {
-    let logger_config = include_str!("log.json");
+    let _logger_config = include_str!("log.json");
 
     if !installer::is_installed() {
         println!("Installing game");
@@ -67,27 +67,22 @@ fn main() -> Result<(), LauncherError> {
                 .required(false),
         )
         .get_matches();
-    let x = matches.value_of("game").unwrap_or("client.jar");
-    let game_jar: String;
-    if x.starts_with("jenkins") {
-        let split = x.split(":");
+    let cli_game_param = matches.value_of("game").unwrap_or("client.jar");
+    let game_jar: String = if cli_game_param.starts_with("jenkins") {
+        let split = cli_game_param.split(':');
         let vec = split.collect::<Vec<&str>>();
 
         let branch = vec.get(1).unwrap();
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
         let s = runtime.block_on(jenkins::download_game(branch));
-        game_jar = s.unwrap();
+        s.unwrap()
     } else {
-        game_jar = String::from(x);
-    }
-    let engine_jar: String;
-
+       String::from(cli_game_param)
+    };
     let working_directory = matches.value_of("dir").unwrap_or("test");
-    let working_directory_path = Path::new(working_directory.clone());
-    if matches.is_present("test_mode") {
-        if !test::is_installed(&working_directory_path) {
-            test::install(&working_directory_path);
-        }
+    let working_directory_path = Path::new(working_directory);
+    if matches.is_present("test_mode") && !test::is_installed(working_directory_path) {
+        test::install(working_directory_path);
     }
     let engine_jar = if matches.is_present("engine") {
         let engine_string: String = matches
@@ -96,13 +91,13 @@ fn main() -> Result<(), LauncherError> {
             .parse()
             .unwrap();
         if engine_string.starts_with("jenkins") {
-            let split = engine_string.split(":");
+            let split = engine_string.split(':');
             let vec = split.collect::<Vec<&str>>();
 
             let branch = vec.get(1).unwrap();
             let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
-            let s: String = runtime.block_on(jenkins::download_engine_jar(&branch))?;
-            if s == "" {
+            let s: String = runtime.block_on(jenkins::download_engine_jar(branch))?;
+            if s.is_empty() {
                 return Err(LauncherError::Custom("[ERROR] Unable to download engine version. Please provide an engine build with --engine".to_string()));
             }
             Path::new(std::env::current_exe().unwrap().parent().unwrap())
@@ -117,7 +112,7 @@ fn main() -> Result<(), LauncherError> {
     } else {
         let runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
         let s = runtime.block_on(jenkins::download_engine_jar("master"))?;
-        if s == "" {
+        if s.is_empty() {
             return Err(LauncherError::Custom("[ERROR] Unable to download engine version. Please provide an engine build with --engine".to_string()));
         }
         Path::new(std::env::current_exe().unwrap().parent().unwrap())
