@@ -1,19 +1,20 @@
 //Stolen off Reddit
 // https://www.reddit.com/r/rust/comments/9lrpru/download_file_with_progress_bar/e7e43wh?utm_source=share&utm_medium=web2x&context=3
-use std::{fs,
-          io::{self, copy, Read},
-          path::Path,
-};
 use std::fs::create_dir_all;
 use std::io::Write;
+use std::{
+    fs,
+    io::{self, copy, Read},
+    path::Path,
+};
 
-use indicatif::{ProgressBar, ProgressStyle};
-use reqwest::{Client, header};
-use reqwest::Url;
 use crate::error::LauncherError;
+use indicatif::{ProgressBar, ProgressStyle};
+use reqwest::Url;
+use reqwest::{header, Client};
 
 pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), LauncherError> {
-    if location.exists(){
+    if location.exists() {
         return Ok(());
     }
     println!("Downloading {}", what);
@@ -41,9 +42,8 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Laun
     let mut request = client.get(url.as_str());
     let pb = ProgressBar::new(total_size);
     pb.set_style(ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})").unwrap()
         .progress_chars("#>-"));
-
 
     if location.exists() {
         let size = location.metadata().unwrap().len() - 1;
@@ -51,12 +51,10 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Laun
         pb.inc(size);
     }
 
-
     let mut dest = fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(location)?;
-
 
     let mut source = request.send().await?;
     while let Some(chunk) = source.chunk().await? {

@@ -3,21 +3,19 @@ use serde::Serialize;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Settings {
-    pub java: String
+    pub java: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct TestConfig {
     pub launcher: Launcher,
     pub auth: Auth,
-
 }
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Launcher {
     pub arguments: Vec<String>,
     pub jre: String,
-
 }
 
 impl Launcher {
@@ -41,7 +39,6 @@ pub(crate) struct Auth {
     pub auth_package: String,
     pub uuid: String,
     pub auth_key: String,
-
 }
 
 impl Auth {

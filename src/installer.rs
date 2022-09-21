@@ -17,8 +17,15 @@ pub async fn install() {
     let mut jre = download_jre().await;
     let java_location = jre.to_str().unwrap();
     let settings = Settings {
-        java: java_location.parse().unwrap()
+        java: java_location.parse().unwrap(),
     };
     let result = serde_yaml::to_string(&settings).unwrap();
-    fs::write(utils::get_kakara_folder().join("settings.yml").to_str().unwrap(), &result).expect("Unable to write file");
+    fs::write(
+        utils::get_kakara_folder()
+            .join("settings.yml")
+            .to_str()
+            .unwrap(),
+        &result,
+    )
+    .expect("Unable to write file");
 }

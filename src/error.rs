@@ -1,6 +1,6 @@
+use crate::error::LauncherError::HTTPError;
 use reqwest::StatusCode;
 use thiserror::Error;
-use crate::error::LauncherError::HTTPError;
 
 #[derive(Error, Debug)]
 pub enum LauncherError {
@@ -36,7 +36,8 @@ impl From<serde_yaml::Error> for LauncherError {
     fn from(err: serde_yaml::Error) -> LauncherError {
         LauncherError::YamlError(err)
     }
-}impl From<std::io::Error> for LauncherError {
+}
+impl From<std::io::Error> for LauncherError {
     fn from(err: std::io::Error) -> LauncherError {
         LauncherError::IOError(err)
     }
