@@ -1,12 +1,12 @@
 /**
-    osspec is the file that defines os specific operations.
- */
+   osspec is the file that defines os specific operations.
+*/
 #[cfg(windows)]
 extern crate winapi;
 
 use core::mem;
-use std::fs;
-use std::path::Path;
+
+
 
 /**
    Find a process by its name.
@@ -26,16 +26,19 @@ use std::path::Path;
 */
 #[cfg(windows)]
 pub unsafe fn find_process_id(process_name: &str) -> u32 {
-    use winapi::um::winnt;
-    use winapi::um::tlhelp32;
-    use winapi::um::winuser::WM_NULL;
     use self::winapi::um::handleapi::CloseHandle;
     use self::winapi::um::tlhelp32::{Process32Next, PROCESSENTRY32};
+    use winapi::um::tlhelp32;
+    use winapi::um::winnt;
+    use winapi::um::winuser::WM_NULL;
 
-    let mut process_info: tlhelp32::PROCESSENTRY32 = tlhelp32::PROCESSENTRY32::default();
-    process_info.dwSize = mem::size_of::<tlhelp32::PROCESSENTRY32>() as u32;
+    let mut process_info: tlhelp32::PROCESSENTRY32 = tlhelp32::PROCESSENTRY32 {
+        dwSize: mem::size_of::<tlhelp32::PROCESSENTRY32>() as u32,
+        ..tlhelp32::PROCESSENTRY32::default()
+    };
 
-    let processes_snapshot: winnt::HANDLE = tlhelp32::CreateToolhelp32Snapshot(tlhelp32::TH32CS_SNAPPROCESS, WM_NULL);
+    let processes_snapshot: winnt::HANDLE =
+        tlhelp32::CreateToolhelp32Snapshot(tlhelp32::TH32CS_SNAPPROCESS, WM_NULL);
     if processes_snapshot == winapi::um::handleapi::INVALID_HANDLE_VALUE {
         return 0;
     }
@@ -43,7 +46,10 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
     let process_info_ptr: *mut PROCESSENTRY32 = &mut process_info;
 
     tlhelp32::Process32First(processes_snapshot, process_info_ptr);
-    let temp_exe_file = String::from_utf8(mem::transmute::<Vec<i8>, Vec<u8>>(remove_zeros(process_info.szExeFile.to_vec()))).unwrap();
+    let temp_exe_file = String::from_utf8(mem::transmute::<Vec<i8>, Vec<u8>>(remove_zeros(
+        process_info.szExeFile.to_vec(),
+    )))
+    .unwrap();
     let exe_file = temp_exe_file.split_whitespace().next().unwrap();
     if process_name == exe_file {
         CloseHandle(processes_snapshot);
@@ -51,8 +57,11 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
     }
 
     while Process32Next(processes_snapshot, process_info_ptr) != 0 {
-        let temp_exe_file = String::from_utf8(mem::transmute::<Vec<i8>, Vec<u8>>(remove_zeros(process_info.szExeFile.to_vec()))).unwrap();
-        let exe_file = temp_exe_file.split(" ").next().unwrap();
+        let temp_exe_file = String::from_utf8(mem::transmute::<Vec<i8>, Vec<u8>>(remove_zeros(
+            process_info.szExeFile.to_vec(),
+        )))
+        .unwrap();
+        let exe_file = temp_exe_file.split(' ').next().unwrap();
         if process_name == exe_file {
             CloseHandle(processes_snapshot);
             return process_info.th32ProcessID;
@@ -72,7 +81,7 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
                 return output;
             }
         }
-        return output;
+        output
     }
 }
 
@@ -94,24 +103,27 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
 */
 #[cfg(windows)]
 pub unsafe fn is_process_running(process_id: &u32) -> bool {
-    use winapi::um::winnt;
-    use winapi::um;
-    use self::winapi::um::winnt::SYNCHRONIZE;
     use self::winapi::shared::minwindef::FALSE;
-    use self::winapi::um::handleapi::CloseHandle;
     use self::winapi::shared::winerror::WAIT_TIMEOUT;
+    use self::winapi::um::handleapi::CloseHandle;
+    use self::winapi::um::winnt::SYNCHRONIZE;
+    use winapi::um;
+    use winapi::um::winnt;
 
-    let process : winnt::HANDLE = um::processthreadsapi::OpenProcess(SYNCHRONIZE, FALSE, *process_id);
+    let process: winnt::HANDLE =
+        um::processthreadsapi::OpenProcess(SYNCHRONIZE, FALSE, *process_id);
     let ret = um::synchapi::WaitForSingleObject(process, 0);
     CloseHandle(process);
 
-    return ret == WAIT_TIMEOUT;
+    ret == WAIT_TIMEOUT
 }
 
 #[cfg(unix)]
 pub unsafe fn is_process_running(process_id: &u32) -> bool {
     let mut result: bool = false;
-    let file = Path::new("/proc").join(process_id.to_string()).join("cmdline");
+    let file = Path::new("/proc")
+        .join(process_id.to_string())
+        .join("cmdline");
     if file.exists() {
         result = true;
     }
@@ -128,7 +140,12 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
         if file.exists() {
             let contents = fs::read_to_string(file).expect("Something went wrong reading the file");
             if contents.contains(process_name) {
-                let string = entry.path().as_path().to_str().unwrap().replace("/proc/", "");
+                let string = entry
+                    .path()
+                    .as_path()
+                    .to_str()
+                    .unwrap()
+                    .replace("/proc/", "");
                 result = string.parse().unwrap()
             }
         }
