@@ -1,25 +1,28 @@
-use std::{fs, thread};
 use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
+use std::{fs, thread};
 
 use discord_rpc_client::Client;
 use serde::Deserialize;
 
-use crate::osspec;
 use crate::settings;
-use crate::settings::Auth;
-use crate::settings::Launcher;
-use crate::settings::TestConfig;
 
-pub fn load(game: &str, dir: &str, engine: String) {
-    let mut working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
-    let mut game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
-    let mut engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
 
-    working = fs::canonicalize(working).unwrap();
-    println!("[DEBUG] working directory: {}", working.as_os_str().to_str().unwrap());
+
+use crate::{osspec, LauncherError};
+
+pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> {
+    let working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
+    let game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
+    let engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
+
+    //working = fs::canonicalize(working)?;
+    println!(
+        "[DEBUG] working directory: {}",
+        working.as_os_str().to_str().unwrap()
+    );
     println!("[DEBUG] engine: {}", engine.as_os_str().to_str().unwrap());
     println!("[DEBUG] game: {}", game.as_os_str().to_str().unwrap());
 
@@ -27,16 +30,28 @@ pub fn load(game: &str, dir: &str, engine: String) {
         create_dir_all(working.as_path());
     }
     if !engine.exists() {
-        panic!("Engine Jar not found in {}", engine.as_os_str().to_str().unwrap())
+        panic!(
+            "Engine Jar not found in {}",
+            engine.as_os_str().to_str().unwrap()
+        )
     }
     if !game.exists() {
-        panic!("Game Jar not found in {}", game.as_os_str().to_str().unwrap())
+        panic!(
+            "Game Jar not found in {}",
+            game.as_os_str().to_str().unwrap()
+        )
     }
     let mut home;
     // .kakara location is different depending on the OS.
     if cfg!(windows) {
         // Use %appdata% if in windows.
-        home = Path::new(&format!("{}{}{}", std::env::var("USERPROFILE").unwrap(), "\\AppData", "\\Roaming")).join(".kakara");
+        home = Path::new(&format!(
+            "{}{}{}",
+            std::env::var("USERPROFILE").unwrap(),
+            "\\AppData",
+            "\\Roaming"
+        ))
+        .join(".kakara");
     } else if cfg!(linux) {
         // Use /home/{user} if on linux. (This may work for mac. Currently untested.)
         home = Path::new(&std::env::var("HOME").unwrap()).join(".kakara");
@@ -73,34 +88,45 @@ pub fn load(game: &str, dir: &str, engine: String) {
         }
     }
 
-    let id = java_command.current_dir(dir).
-        arg("-jar").arg(game.as_os_str().to_str().unwrap()).
-        arg(format!("{}={}", "--engine", engine.as_os_str().to_str().unwrap())).
-        spawn().unwrap().id();
+    let id = java_command
+        .current_dir(dir)
+        .arg("-jar")
+        .arg(game.as_os_str().to_str().unwrap())
+        .arg(format!(
+            "{}={}",
+            "--engine",
+            engine.as_os_str().to_str().unwrap()
+        ))
+        .spawn()
+        .unwrap()
+        .id();
     unsafe { discord_client(dir, id) }
+    Ok(())
 }
 
 unsafe fn discord_client(dir: &str, id: u32) {
     //Ensure file was created
     let discord_file = Path::new(dir).join("discord.yml");
 
-    let i = env!("DISCORD_KEY").parse().unwrap();
-    let mut drpc = Client::new(i);
-    drpc.start();
-    println!("Starting Discord");
-    while osspec::is_process_running(&id) {
-        if discord_file.exists() {
-            let test_file = fs::read_to_string(Path::new(dir).join("discord.yml"));
-            let discord: Discord = serde_yaml::from_str(&test_file.unwrap()).unwrap();
-            drpc.set_activity(|act| act.state(discord.current_task)).unwrap();
+    let i = option_env!("DISCORD_KEY");
+    if let Some(value) = i {
+        let mut drpc = Client::new(value.parse().unwrap());
+        drpc.start();
+        println!("Starting Discord");
+        while osspec::is_process_running(&id) {
+            if discord_file.exists() {
+                let test_file = fs::read_to_string(Path::new(dir).join("discord.yml"));
+                let discord: Discord = serde_yaml::from_str(&test_file.unwrap()).unwrap();
+                drpc.set_activity(|act| act.state(discord.current_task))
+                    .unwrap();
+                thread::sleep(Duration::new(5, 0));
+            }
             thread::sleep(Duration::new(5, 0));
         }
-        thread::sleep(Duration::new(5, 0));
     }
 }
 
-
 #[derive(Deserialize)]
 struct Discord {
-    current_task: String
+    current_task: String,
 }
