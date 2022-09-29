@@ -4,19 +4,14 @@ use std::process::Command;
 use std::time::Duration;
 use std::{fs, thread};
 
-use discord_rpc_client::Client;
 use serde::Deserialize;
 
 use crate::settings;
 
-
-
 use crate::{osspec, LauncherError};
 
-pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> {
-    let working = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(dir);
-    let game = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(game);
-    let engine = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join(engine);
+pub fn load(game: PathBuf, dir: PathBuf, engine: PathBuf) -> Result<(), LauncherError> {
+    let working = dir;
 
     //working = fs::canonicalize(working)?;
     println!(
@@ -69,7 +64,7 @@ pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> 
     println!("Kakara Config {:?}", home.to_str());
     let yml_string = fs::read_to_string(home);
     let settings: settings::Settings = serde_yaml::from_str(&yml_string.unwrap()).unwrap();
-    let test_path = Path::new(dir).join("test").join("test.yml");
+    let test_path = working.join("test.yml");
 
     let test_file = fs::read_to_string(&test_path);
     let mut java = settings.java;
@@ -77,10 +72,11 @@ pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> 
     if !data.launcher.jre.is_empty() {
         java = data.launcher.jre;
     }
+    println!("[DEBUG] {}", &java);
+
     let mut java_command = Command::new(java);
     if test_path.exists() {
         println!("[DEBUG] Using custom arguments");
-
         for x in data.launcher.arguments {
             if !x.is_empty() {
                 java_command.arg(x);
@@ -89,9 +85,9 @@ pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> 
     }
 
     let id = java_command
-        .current_dir(dir)
+        .current_dir(working)
         .arg("-jar")
-        .arg(game.as_os_str().to_str().unwrap())
+        .arg(&game)
         .arg(format!(
             "{}={}",
             "--engine",
@@ -100,20 +96,32 @@ pub fn load(game: &str, dir: &str, engine: String) -> Result<(), LauncherError> 
         .spawn()
         .unwrap()
         .id();
-    unsafe { discord_client(dir, id) }
+
+    #[cfg(feature = "discord")]
+    {
+        discord_client(&dir, id);
+    }
+    #[cfg(not(feature = "discord"))]
+    {
+        println!("Discord integration is disabled.");
+        while osspec::is_process_running(id) {
+            thread::sleep(Duration::new(5, 0));
+        }
+    }
     Ok(())
 }
 
-unsafe fn discord_client(dir: &str, id: u32) {
+#[cfg(feature = "discord")]
+fn discord_client(dir: &PathBuf, id: u32) {
     //Ensure file was created
-    let discord_file = Path::new(dir).join("discord.yml");
+    let discord_file = dir.join("discord.yml");
 
     let i = option_env!("DISCORD_KEY");
     if let Some(value) = i {
-        let mut drpc = Client::new(value.parse().unwrap());
+        let mut drpc = discord_rpc_client::Client::new(value.parse().unwrap());
         drpc.start();
         println!("Starting Discord");
-        while osspec::is_process_running(&id) {
+        while osspec::is_process_running(id) {
             if discord_file.exists() {
                 let test_file = fs::read_to_string(Path::new(dir).join("discord.yml"));
                 let discord: Discord = serde_yaml::from_str(&test_file.unwrap()).unwrap();
@@ -125,7 +133,7 @@ unsafe fn discord_client(dir: &str, id: u32) {
         }
     }
 }
-
+#[cfg(feature = "discord")]
 #[derive(Deserialize)]
 struct Discord {
     current_task: String,

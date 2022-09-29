@@ -1,16 +1,14 @@
-
-
-
+use std::env::current_dir;
 use std::fs;
-use std::fs::{create_dir_all};
+use std::fs::create_dir_all;
 
-use std::path::{Path};
+use std::path::Path;
 
 use std::str::FromStr;
 
 use crate::downloader;
 use crate::error::LauncherError;
-use jenkins_api::job::{Job};
+use jenkins_api::job::Job;
 use jenkins_api::JenkinsBuilder;
 use reqwest::Url;
 const JENKINS_URL: &str = "https://ci.kingtux.dev";
@@ -24,13 +22,11 @@ url -> The url for the engine's jenkins (without the /artifact)
 String -> The name of the engine that was downloaded.
 
  */
-pub async fn download_engine_jar(branch: &str) -> Result<String, LauncherError> {
+pub fn download_engine_jar(branch: &str) -> Result<String, LauncherError> {
     let input = format!("{JENKINS_URL}/view/Kakara/job/Kakara%20Engine%202/job/{branch}/lastSuccessfulBuild/artifact/files.txt" );
-    let resp = reqwest::get(Url::from_str(input.as_str()).unwrap())
-        .await
+    let resp = reqwest::blocking::get(Url::from_str(input.as_str()).unwrap())
         .unwrap()
         .text()
-        .await
         .unwrap();
     let split = resp.lines();
     let vec: Vec<&str> = split.collect();
@@ -42,10 +38,8 @@ pub async fn download_engine_jar(branch: &str) -> Result<String, LauncherError> 
             if !buf1.exists() {
                 create_dir_all(buf1);
             }
-            let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap())
-                .join("engine")
-                .join(x);
-            downloader::download(string.as_str(), buf.as_path(), "Kakara Engine").await?;
+            let buf = current_dir().unwrap().join("engine").join(x);
+            downloader::download(string.as_str(), buf.as_path(), "Kakara Engine")?;
 
             return Ok(x.to_string());
         }
@@ -66,11 +60,8 @@ branch -> The branch that should be downloaded.
 Result<String, String> -> The result of the download.
 
  */
-pub async fn download_game(branch: &str) -> Result<String, String> {
-    let jenkins = JenkinsBuilder::new(JENKINS_URL)
-        .build()
-        .unwrap();
-    println!("{jenkins:?}");
+pub fn download_game(branch: &str) -> Result<String, String> {
+    let jenkins = JenkinsBuilder::new(JENKINS_URL).build().unwrap();
     let kakara_job = jenkins
         .get_job("Kakara")
         .unwrap()
@@ -81,8 +72,6 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
 
     for sub_job in vec {
         if sub_job.name.eq(branch) {
-            println!("{sub_job:?}");
-
             let build = sub_job
                 .get_full_job(&jenkins)
                 .unwrap()
@@ -94,12 +83,8 @@ pub async fn download_game(branch: &str) -> Result<String, String> {
                 if x.relative_path.starts_with("client/") {
                     let value = format!("{}artifact/{}", build.url, x.relative_path);
                     let string = x.file_name;
-                    let buf = Path::new(std::env::current_exe().unwrap().parent().unwrap())
-                        .join("game")
-                        .join(string);
-                    downloader::download(&value, buf.as_path(), "Kakara game")
-                        .await
-                        .unwrap();
+                    let buf = current_dir().unwrap().join("game").join(string);
+                    downloader::download(&value, buf.as_path(), "Kakara game").unwrap();
                     return_value = Result::Ok(String::from(buf.to_str().unwrap()));
                     break;
                 }

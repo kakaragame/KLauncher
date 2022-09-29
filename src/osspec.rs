@@ -1,29 +1,27 @@
 /**
-   osspec is the file that defines os specific operations.
-*/
+osspec is the file that defines os specific operations.
+ */
 #[cfg(windows)]
 extern crate winapi;
 
 use core::mem;
 
-
-
 /**
-   Find a process by its name.
+Find a process by its name.
 
-   This function uses the Window API to get the process.
+This function uses the Window API to get the process.
 
-   # Params
-   process_name -> The name of the process to find the id for. (Ex: `"chrome.exe"`)
+# Params
+process_name -> The name of the process to find the id for. (Ex: `"chrome.exe"`)
 
-   # Returns
-   u32 -> The id of the process. (0 if not found).
+# Returns
+u32 -> The id of the process. (0 if not found).
 
-   # Examples
-   ```rust
-   let pid : u32 = osspec::find_process_id("chrome.exe");
-   ```
-*/
+# Examples
+```rust
+let pid : u32 = osspec::find_process_id("chrome.exe");
+```
+ */
 #[cfg(windows)]
 pub unsafe fn find_process_id(process_name: &str) -> u32 {
     use self::winapi::um::handleapi::CloseHandle;
@@ -86,40 +84,40 @@ pub unsafe fn find_process_id(process_name: &str) -> u32 {
 }
 
 /**
-   Check if a process is running by its id.
+Check if a process is running by its id.
 
-   This function uses the Window API to get the process.
+This function uses the Window API to get the process.
 
-   # Params
-   process_id -> The process id to find. (Note: process ids can be recycled.)
+# Params
+process_id -> The process id to find. (Note: process ids can be recycled.)
 
-   # Returns
-   bool -> If the process is running.
+# Returns
+bool -> If the process is running.
 
-   # Examples
-   ```rust
-   let is_running : bool = osspec::is_process_running(555555);
-   ```
-*/
+# Examples
+```rust
+let is_running : bool = osspec::is_process_running(555555);
+```
+ */
 #[cfg(windows)]
-pub unsafe fn is_process_running(process_id: &u32) -> bool {
+pub fn is_process_running(process_id: u32) -> bool {
     use self::winapi::shared::minwindef::FALSE;
     use self::winapi::shared::winerror::WAIT_TIMEOUT;
     use self::winapi::um::handleapi::CloseHandle;
     use self::winapi::um::winnt::SYNCHRONIZE;
     use winapi::um;
     use winapi::um::winnt;
-
-    let process: winnt::HANDLE =
-        um::processthreadsapi::OpenProcess(SYNCHRONIZE, FALSE, *process_id);
-    let ret = um::synchapi::WaitForSingleObject(process, 0);
-    CloseHandle(process);
-
-    ret == WAIT_TIMEOUT
+    unsafe {
+        let process: winnt::HANDLE =
+            um::processthreadsapi::OpenProcess(SYNCHRONIZE, FALSE, process_id);
+        let ret = um::synchapi::WaitForSingleObject(process, 0);
+        CloseHandle(process);
+        ret == WAIT_TIMEOUT
+    }
 }
 
 #[cfg(unix)]
-pub unsafe fn is_process_running(process_id: &u32) -> bool {
+pub fn is_process_running(process_id: &u32) -> bool {
     let mut result: bool = false;
     let file = Path::new("/proc")
         .join(process_id.to_string())
@@ -131,7 +129,7 @@ pub unsafe fn is_process_running(process_id: &u32) -> bool {
 }
 
 #[cfg(unix)]
-pub unsafe fn find_process_id(process_name: &str) -> u32 {
+pub fn find_process_id(process_name: &str) -> u32 {
     let paths = fs::read_dir("/proc/").unwrap();
     let mut result: u32 = 0;
     for path in paths {

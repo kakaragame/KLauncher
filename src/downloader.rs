@@ -1,18 +1,16 @@
 //Stolen off Reddit
 // https://www.reddit.com/r/rust/comments/9lrpru/download_file_with_progress_bar/e7e43wh?utm_source=share&utm_medium=web2x&context=3
-use std::fs::create_dir_all;
-use std::io::Write;
-use std::{
-    fs,
-    path::Path,
-};
-
 use crate::error::LauncherError;
 use indicatif::{ProgressBar, ProgressStyle};
+use reqwest::blocking::Client;
+use reqwest::header;
 use reqwest::Url;
-use reqwest::{header, Client};
+use std::fs::create_dir_all;
+use std::io::Read;
+use std::io::Write;
+use std::{fs, path::Path};
 
-pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), LauncherError> {
+pub fn download(url: &str, location: &Path, what: &str) -> Result<(), LauncherError> {
     if location.exists() {
         return Ok(());
     }
@@ -26,7 +24,7 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Laun
     let client = Client::new();
 
     let total_size = {
-        let resp = client.head(url.as_str()).send().await?;
+        let resp = client.head(url.as_str()).send()?;
         if resp.status().is_success() {
             resp.headers()
                 .get(header::CONTENT_LENGTH)
@@ -55,10 +53,14 @@ pub async fn download(url: &str, location: &Path, what: &str) -> Result<(), Laun
         .append(true)
         .open(location)?;
 
-    let mut source = request.send().await?;
-    while let Some(chunk) = source.chunk().await? {
-        dest.write_all(&chunk);
-        pb.inc(chunk.len() as u64);
+    let mut source = request.send()?;
+    let mut bytes = [0; 24];
+    while let Ok(chunk) = source.read(&mut bytes) {
+        if chunk == 0 {
+            break;
+        }
+        dest.write_all(&bytes[..chunk])?;
+        pb.inc(chunk as u64);
     }
     println!(
         "Download of '{}' has been completed.",

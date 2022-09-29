@@ -8,4 +8,4 @@ So it is only a CLI.
 
 This is an example command
 
-`./klauncher --game jenkins:master --engine jenkins:master --test_mode --working_dir test`
+`./klauncher --game jenkins:master --engine jenkins:master --test-mode --working-dir test`

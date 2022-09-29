@@ -3,7 +3,7 @@
 use std::fs::{create_dir_all, remove_dir_all, File};
 use std::path::{Path, PathBuf};
 
-use std::{fs};
+use std::fs;
 
 use crate::{downloader, utils};
 
@@ -53,7 +53,7 @@ pub async fn download_jre() -> PathBuf {
     create_dir_all(&folder).unwrap();
 
     let jre_download = downloads.join(format!("download.{}", get_file_extension()));
-    let result = downloader::download(&url, &jre_download, "JRE 17").await;
+    let result = downloader::download(&url, &jre_download, "JRE 17");
     if result.is_err() {
         println!("Unable to download {}", result.err().unwrap());
         panic!("Unable to download JRE");
@@ -63,7 +63,6 @@ pub async fn download_jre() -> PathBuf {
     let mut file1 = fs::read_dir(&folder).unwrap();
     if let Some(file) = file1.next() {
         folder = folder.join(file.unwrap().file_name().to_str().unwrap());
-
     }
 
     folder.join("bin").join(get_java_exec())
